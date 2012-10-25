@@ -70,11 +70,12 @@ NSString *const yuvFragmentShaderString = SHADER_STRING
 
 static BOOL validateProgram(GLuint prog)
 {
-	GLint logLength, status;
+	GLint status;
 	
     glValidateProgram(prog);
     
 #ifdef DEBUG
+    GLint logLength;
     glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &logLength);
     if (logLength > 0)
     {
