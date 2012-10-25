@@ -74,6 +74,7 @@
 		87E7944916391B9E000A0848 /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswscale.a; path = libs/libswscale.a; sourceTree = "<group>"; };
 		87E7945016391BC1000A0848 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/usr/lib/libz.dylib; sourceTree = DEVELOPER_DIR; };
 		87E7945216391BD2000A0848 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/System/Library/Frameworks/MediaPlayer.framework; sourceTree = DEVELOPER_DIR; };
+		87E7946116394577000A0848 /* KxAudioManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KxAudioManager.h; path = kxmovie/KxAudioManager.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -174,6 +175,7 @@
 			isa = PBXGroup;
 			children = (
 				87E7941F1639107F000A0848 /* kxmovie.bundle */,
+				87E7946116394577000A0848 /* KxAudioManager.h */,
 				87E7941E1639107F000A0848 /* KxAudioManager.m */,
 				87E794201639107F000A0848 /* KxMovieDecoder.h */,
 				87E794211639107F000A0848 /* KxMovieDecoder.m */,
