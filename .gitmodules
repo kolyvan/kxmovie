@@ -1,0 +1,3 @@
+[submodule "FFmpeg"]
+	path = FFmpeg
+	url = git://github.com/FFmpeg/FFmpeg.git
