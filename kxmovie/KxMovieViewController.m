@@ -241,7 +241,7 @@ static NSMutableDictionary * gHistory;
     [_progressSlider addTarget:self
                         action:@selector(progressDidChange:)
               forControlEvents:UIControlEventValueChanged];
-    [_progressSlider setThumbImage:[UIImage imageNamed:@"sliderthumb"]
+    [_progressSlider setThumbImage:[UIImage imageNamed:@"kxmovie.bundle/sliderthumb"]
                           forState:UIControlStateNormal];
       
     _leftLabel = [[UILabel alloc] initWithFrame:CGRectMake(width-78,5,50,20)];
@@ -274,21 +274,21 @@ static NSMutableDictionary * gHistory;
     _rewindButton.frame = CGRectMake(width * 0.5 - 65, 5, 40, 40);
     _rewindButton.backgroundColor = [UIColor clearColor];
     _rewindButton.showsTouchWhenHighlighted = YES;
-    [_rewindButton setImage:[UIImage imageNamed:@"playback_rew"] forState:UIControlStateNormal];
+    [_rewindButton setImage:[UIImage imageNamed:@"kxmovie.bundle/playback_rew"] forState:UIControlStateNormal];
     [_rewindButton addTarget:self action:@selector(rewindDidTouch:) forControlEvents:UIControlEventTouchUpInside];
     
     _playButton = [UIButton buttonWithType:UIButtonTypeCustom];
     _playButton.frame = CGRectMake(width * 0.5 - 20, 5, 40, 40);
     _playButton.backgroundColor = [UIColor clearColor];
     _playButton.showsTouchWhenHighlighted = YES;
-    [_playButton setImage:[UIImage imageNamed:@"playback_play"] forState:UIControlStateNormal];
+    [_playButton setImage:[UIImage imageNamed:@"kxmovie.bundle/playback_play"] forState:UIControlStateNormal];
     [_playButton addTarget:self action:@selector(playDidTouch:) forControlEvents:UIControlEventTouchUpInside];
 
     _forwardButton = [UIButton buttonWithType:UIButtonTypeCustom];
     _forwardButton.frame = CGRectMake(width * 0.5 + 25, 5, 40, 40);
     _forwardButton.backgroundColor = [UIColor clearColor];
     _forwardButton.showsTouchWhenHighlighted = YES;
-    [_forwardButton setImage:[UIImage imageNamed:@"playback_ff"] forState:UIControlStateNormal];
+    [_forwardButton setImage:[UIImage imageNamed:@"kxmovie.bundle/playback_ff"] forState:UIControlStateNormal];
     [_forwardButton addTarget:self action:@selector(forwardDidTouch:) forControlEvents:UIControlEventTouchUpInside];
 
     _volumeSlider = [[MPVolumeView alloc] initWithFrame:CGRectMake(5, 50, width-(5 * 2), 20)];
@@ -340,7 +340,7 @@ static NSMutableDictionary * gHistory;
     
     if (!_decoder.validVideo) {
         
-        _imageView.image = [UIImage imageNamed:@"music_icon.png"];
+        _imageView.image = [UIImage imageNamed:@"kxmovie.bundle/music_icon.png"];
         _imageView.contentMode = UIViewContentModeCenter;
     }
         
@@ -889,7 +889,7 @@ static NSMutableDictionary * gHistory;
 
 - (void) updatePlayButton
 {
-    [_playButton setImage:[UIImage imageNamed:self.playing ? @"playback_pause" : @"playback_play"]
+    [_playButton setImage:[UIImage imageNamed:self.playing ? @"kxmovie.bundle/playback_pause" : @"kxmovie.bundle/playback_play"]
                  forState:UIControlStateNormal];
 }
 
