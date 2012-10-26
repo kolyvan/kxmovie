@@ -7,22 +7,26 @@ First you need download, configure and build [FFmpeg](http://ffmpeg.org/index.ht
 For this open console and type in
 	
 	cd kxmovie
-	git submodule update
-	git submodule foreach git pull
+	git submodule update --init	
 	rake
 
 ### Usage
 
-See KxMovieExample demo project as example of using.
-Remember, you need to copy some movies via iTunes for playing them.
+1. Drop files from kxmovie/output folder in your project.
+2. Add frameworks: MediaPlayer, CoreAudio, AudioToolbox, Accelerate, QuartzCore, OpenGLES and libz.dylib
+
+For play movies:
 
 	ViewController *vc;
 	vc = [KxMovieViewController movieViewControllerWithContentPath:path error:nil];
 	[self presentViewController:vc animated:YES completion:nil];
 
+Also, see KxMovieExample demo project as example of using.
+Remember, you need to copy some movies via iTunes for playing them.
+
 ### Requirements
 
- at least iOS 5.1
+at least iOS 5.1 and iPhone 3GS 
 
 ### Screenshots:
 
