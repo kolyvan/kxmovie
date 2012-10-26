@@ -554,7 +554,7 @@ exit:
     } else {
         
         glDeleteProgram(_program);
-        _program = NO;
+        _program = 0;
     }
     
     return result;
