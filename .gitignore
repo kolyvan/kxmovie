@@ -23,6 +23,7 @@ project.xcworkspace
 ## my
 tmp/*
 libs/*
+output/*
 plan
 
 

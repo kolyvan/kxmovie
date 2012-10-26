@@ -35,7 +35,38 @@
 		87E7944F16391B9E000A0848 /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7944916391B9E000A0848 /* libswscale.a */; };
 		87E7945116391BC1000A0848 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7945016391BC1000A0848 /* libz.dylib */; };
 		87E7945416391BDC000A0848 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7945216391BD2000A0848 /* MediaPlayer.framework */; };
+		87FD6176163A75440090956E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E793FE16390F6D000A0848 /* Foundation.framework */; };
+		87FD6182163A75AF0090956E /* KxAudioManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 87E7941E1639107F000A0848 /* KxAudioManager.m */; };
+		87FD6183163A75B10090956E /* KxMovieDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 87E794211639107F000A0848 /* KxMovieDecoder.m */; };
+		87FD6184163A75B50090956E /* KxMovieGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 87E794231639107F000A0848 /* KxMovieGLView.m */; };
+		87FD6185163A75B70090956E /* KxMovieViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 87E794251639107F000A0848 /* KxMovieViewController.m */; };
+		87FD6186163A75BF0090956E /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7944416391B9E000A0848 /* libavcodec.a */; };
+		87FD6187163A75C10090956E /* libavdevice.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7944516391B9E000A0848 /* libavdevice.a */; };
+		87FD6188163A75C30090956E /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7944616391B9E000A0848 /* libavformat.a */; };
+		87FD6189163A75C60090956E /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7944716391B9E000A0848 /* libavutil.a */; };
+		87FD618A163A75C80090956E /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7944816391B9E000A0848 /* libswresample.a */; };
+		87FD618B163A75C90090956E /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7944916391B9E000A0848 /* libswscale.a */; };
+		87FD618C163A75CC0090956E /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7945016391BC1000A0848 /* libz.dylib */; };
+		87FD618D163A75CF0090956E /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7940016390F6D000A0848 /* CoreGraphics.framework */; };
+		87FD618E163A75D20090956E /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7945216391BD2000A0848 /* MediaPlayer.framework */; };
+		87FD618F163A75D60090956E /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7943D163910FB000A0848 /* CoreAudio.framework */; };
+		87FD6190163A75D90090956E /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7943B163910F6000A0848 /* AudioToolbox.framework */; };
+		87FD6191163A75DC0090956E /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E79437163910D0000A0848 /* QuartzCore.framework */; };
+		87FD6192163A75DF0090956E /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E79439163910EA000A0848 /* Accelerate.framework */; };
+		87FD6193163A75E10090956E /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E79435163910CA000A0848 /* OpenGLES.framework */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		87FD6173163A75440090956E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/${PRODUCT_NAME}";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		87E793F816390F6D000A0848 /* KxMovieExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KxMovieExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -49,14 +80,14 @@
 		87E7940E16390F6D000A0848 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
 		87E7941016390F6D000A0848 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
 		87E7941216390F6D000A0848 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
-		87E7941E1639107F000A0848 /* KxAudioManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = KxAudioManager.m; path = kxmovie/KxAudioManager.m; sourceTree = "<group>"; };
-		87E7941F1639107F000A0848 /* kxmovie.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; name = kxmovie.bundle; path = kxmovie/kxmovie.bundle; sourceTree = "<group>"; };
-		87E794201639107F000A0848 /* KxMovieDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KxMovieDecoder.h; path = kxmovie/KxMovieDecoder.h; sourceTree = "<group>"; };
-		87E794211639107F000A0848 /* KxMovieDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = KxMovieDecoder.m; path = kxmovie/KxMovieDecoder.m; sourceTree = "<group>"; };
-		87E794221639107F000A0848 /* KxMovieGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KxMovieGLView.h; path = kxmovie/KxMovieGLView.h; sourceTree = "<group>"; };
-		87E794231639107F000A0848 /* KxMovieGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = KxMovieGLView.m; path = kxmovie/KxMovieGLView.m; sourceTree = "<group>"; };
-		87E794241639107F000A0848 /* KxMovieViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KxMovieViewController.h; path = kxmovie/KxMovieViewController.h; sourceTree = "<group>"; };
-		87E794251639107F000A0848 /* KxMovieViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = KxMovieViewController.m; path = kxmovie/KxMovieViewController.m; sourceTree = "<group>"; };
+		87E7941E1639107F000A0848 /* KxAudioManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KxAudioManager.m; sourceTree = "<group>"; };
+		87E7941F1639107F000A0848 /* kxmovie.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = kxmovie.bundle; sourceTree = "<group>"; };
+		87E794201639107F000A0848 /* KxMovieDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KxMovieDecoder.h; sourceTree = "<group>"; };
+		87E794211639107F000A0848 /* KxMovieDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KxMovieDecoder.m; sourceTree = "<group>"; };
+		87E794221639107F000A0848 /* KxMovieGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KxMovieGLView.h; sourceTree = "<group>"; };
+		87E794231639107F000A0848 /* KxMovieGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KxMovieGLView.m; sourceTree = "<group>"; };
+		87E794241639107F000A0848 /* KxMovieViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KxMovieViewController.h; sourceTree = "<group>"; };
+		87E794251639107F000A0848 /* KxMovieViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KxMovieViewController.m; sourceTree = "<group>"; };
 		87E7942B1639108E000A0848 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		87E7942C1639108E000A0848 /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		87E7942D1639108E000A0848 /* MainViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainViewController.h; sourceTree = "<group>"; };
@@ -74,7 +105,9 @@
 		87E7944916391B9E000A0848 /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswscale.a; path = libs/libswscale.a; sourceTree = "<group>"; };
 		87E7945016391BC1000A0848 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/usr/lib/libz.dylib; sourceTree = DEVELOPER_DIR; };
 		87E7945216391BD2000A0848 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/System/Library/Frameworks/MediaPlayer.framework; sourceTree = DEVELOPER_DIR; };
-		87E7946116394577000A0848 /* KxAudioManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KxAudioManager.h; path = kxmovie/KxAudioManager.h; sourceTree = "<group>"; };
+		87E7946116394577000A0848 /* KxAudioManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KxAudioManager.h; sourceTree = "<group>"; };
+		87FD6175163A75440090956E /* libkxmovie.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libkxmovie.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		87FD6179163A75440090956E /* kxmovie-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "kxmovie-Prefix.pch"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -101,14 +134,36 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		87FD6172163A75440090956E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87FD6176163A75440090956E /* Foundation.framework in Frameworks */,
+				87FD618D163A75CF0090956E /* CoreGraphics.framework in Frameworks */,
+				87FD6186163A75BF0090956E /* libavcodec.a in Frameworks */,
+				87FD6187163A75C10090956E /* libavdevice.a in Frameworks */,
+				87FD6188163A75C30090956E /* libavformat.a in Frameworks */,
+				87FD6189163A75C60090956E /* libavutil.a in Frameworks */,
+				87FD618A163A75C80090956E /* libswresample.a in Frameworks */,
+				87FD618B163A75C90090956E /* libswscale.a in Frameworks */,
+				87FD618C163A75CC0090956E /* libz.dylib in Frameworks */,
+				87FD618E163A75D20090956E /* MediaPlayer.framework in Frameworks */,
+				87FD618F163A75D60090956E /* CoreAudio.framework in Frameworks */,
+				87FD6190163A75D90090956E /* AudioToolbox.framework in Frameworks */,
+				87FD6192163A75DF0090956E /* Accelerate.framework in Frameworks */,
+				87FD6191163A75DC0090956E /* QuartzCore.framework in Frameworks */,
+				87FD6193163A75E10090956E /* OpenGLES.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		87E793EB16390F10000A0848 = {
 			isa = PBXGroup;
 			children = (
-				87E7941D16391071000A0848 /* src */,
 				87E7940216390F6D000A0848 /* KxMovieExample */,
+				87FD6177163A75440090956E /* kxmovie */,
 				87E793FB16390F6D000A0848 /* Frameworks */,
 				87E793F916390F6D000A0848 /* Products */,
 			);
@@ -118,6 +173,7 @@
 			isa = PBXGroup;
 			children = (
 				87E793F816390F6D000A0848 /* KxMovieExample.app */,
+				87FD6175163A75440090956E /* libkxmovie.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -171,7 +227,7 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		87E7941D16391071000A0848 /* src */ = {
+		87FD6177163A75440090956E /* kxmovie */ = {
 			isa = PBXGroup;
 			children = (
 				87E7941F1639107F000A0848 /* kxmovie.bundle */,
@@ -183,8 +239,17 @@
 				87E794231639107F000A0848 /* KxMovieGLView.m */,
 				87E794241639107F000A0848 /* KxMovieViewController.h */,
 				87E794251639107F000A0848 /* KxMovieViewController.m */,
+				87FD6178163A75440090956E /* Supporting Files */,
 			);
-			name = src;
+			path = kxmovie;
+			sourceTree = "<group>";
+		};
+		87FD6178163A75440090956E /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				87FD6179163A75440090956E /* kxmovie-Prefix.pch */,
+			);
+			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -207,6 +272,23 @@
 			productReference = 87E793F816390F6D000A0848 /* KxMovieExample.app */;
 			productType = "com.apple.product-type.application";
 		};
+		87FD6174163A75440090956E /* kxmovie */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 87FD6180163A75440090956E /* Build configuration list for PBXNativeTarget "kxmovie" */;
+			buildPhases = (
+				87FD6171163A75440090956E /* Sources */,
+				87FD6172163A75440090956E /* Frameworks */,
+				87FD6173163A75440090956E /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = kxmovie;
+			productName = kxmovie;
+			productReference = 87FD6175163A75440090956E /* libkxmovie.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -228,6 +310,7 @@
 			projectRoot = "";
 			targets = (
 				87E793F716390F6D000A0848 /* KxMovieExample */,
+				87FD6174163A75440090956E /* kxmovie */,
 			);
 		};
 /* End PBXProject section */
@@ -259,6 +342,17 @@
 				87E7942A1639107F000A0848 /* KxMovieViewController.m in Sources */,
 				87E7942F1639108E000A0848 /* AppDelegate.m in Sources */,
 				87E794301639108E000A0848 /* MainViewController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87FD6171163A75440090956E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87FD6182163A75AF0090956E /* KxAudioManager.m in Sources */,
+				87FD6183163A75B10090956E /* KxMovieDecoder.m in Sources */,
+				87FD6184163A75B50090956E /* KxMovieGLView.m in Sources */,
+				87FD6185163A75B70090956E /* KxMovieViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -366,6 +460,89 @@
 			};
 			name = Release;
 		};
+		87FD617E163A75440090956E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DSTROOT = /tmp/kxmovie.dst;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "kxmovie/kxmovie-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/libs\"",
+				);
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-all_load",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				USER_HEADER_SEARCH_PATHS = ffmpeg;
+			};
+			name = Debug;
+		};
+		87FD617F163A75440090956E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DSTROOT = /tmp/kxmovie.dst;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "kxmovie/kxmovie-Prefix.pch";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/libs\"",
+				);
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-all_load",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				USER_HEADER_SEARCH_PATHS = ffmpeg;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -383,6 +560,15 @@
 			buildConfigurations = (
 				87E7941B16390F6D000A0848 /* Debug */,
 				87E7941C16390F6D000A0848 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		87FD6180163A75440090956E /* Build configuration list for PBXNativeTarget "kxmovie" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87FD617E163A75440090956E /* Debug */,
+				87FD617F163A75440090956E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 		};

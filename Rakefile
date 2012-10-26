@@ -8,6 +8,8 @@ def system_or_exit(cmd, stdout = nil)
   system(cmd) or raise "******** Build failed ********"
 end
 
+## build ffmpeg
+
 XCODE_PATH='/Applications/Xcode.app/Contents/Developer/Platforms'
 GCC_PATH='/Developer/usr/bin/gcc'
 LIB_PATH='/usr/lib/system'
@@ -131,6 +133,11 @@ task :check_gas_preprocessor do
 
 end
 
+desc "Clean ffmpeg"
+task :clean_ffmpeg do
+	system_or_exit "cd ffmpeg; make clean"
+end
+
 desc "Build ffmpeg i386 libs"
 task :build_ffmpeg_i386 do	
 	buildArch('i386')	
@@ -159,5 +166,54 @@ task :build_ffmpeg_universal do
 
 end
 
-task :build_ffmpeg => [:check_gas_preprocessor, :build_ffmpeg_i386, :build_ffmpeg_armv7, :build_ffmpeg_universal ]
-task :default => [:build_ffmpeg ]
+## build libkxmovie
+
+def cleanMovieLib(config)
+	buildDir = Pathname.new 'tmp/build'	
+  	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration #{config} -sdk iphoneos6.0 clean SYMROOT=#{buildDir}"
+	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration #{config} -sdk iphonesimulator6.0 clean SYMROOT=#{buildDir}"  	
+end
+
+desc "Clean libkxmovie-debug"
+task :clean_movie_debug do
+	cleanMovieLib 'Debug'
+end
+
+desc "Clean libkxmovie-release"
+task :clean_movie_release do
+	cleanMovieLib 'Release'
+end
+
+desc "Build libkxmovie-debug"
+task :build_movie_debug do
+	buildDir = Pathname.new 'tmp/build'
+	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Debug -sdk iphoneos6.0 build SYMROOT=#{buildDir}"	
+	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Debug -sdk iphonesimulator6.0 build SYMROOT=#{buildDir}"	
+	system_or_exit "lipo -create -arch armv7 tmp/build/Debug-iphoneos/libkxmovie.a -arch i386 tmp/build/Debug-iphonesimulator/libkxmovie.a -output tmp/build/libkxmovie.a"
+end
+
+desc "Build libkxmovie-release"
+task :build_movie_release do
+	buildDir = Pathname.new 'tmp/build'
+	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Release -sdk iphoneos6.0 build SYMROOT=#{buildDir}"
+	#system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Release -sdk iphonesimulator6.0 build SYMROOT=#{buildDir}"	
+	FileUtils.copy Pathname.new('tmp/build/Release-iphoneos/libkxmovie.a'), buildDir
+end
+
+desc "Copy to output folder"
+task :copy_movie do	
+	dest = ensureDir 'output'
+	FileUtils.move Pathname.new("tmp/build/libkxmovie.a"), dest
+	FileUtils.copy Pathname.new("libs/libavutil.a"), dest
+	FileUtils.copy Pathname.new("kxmovie/KxMovieViewController.h"), dest	
+	FileUtils.copy Pathname.new("kxmovie/KxAudioManager.h"), dest	
+	FileUtils.copy Pathname.new("kxmovie/KxMovieDecoder.h"), dest	
+end	
+
+##
+task :clean => [:clean_movie_debug, :clean_movie_release, :clean_ffmpeg]
+task :build_ffmpeg => [:check_gas_preprocessor, :build_ffmpeg_i386, :build_ffmpeg_armv7, :build_ffmpeg_universal]
+task :build_movie => [:build_movie_debug, :copy_movie] 
+#task :build_movie => [:build_movie_release, :copy_movie] 
+task :build_all => [:build_ffmpeg, :build_movie] 
+task :default => [:build_all]
