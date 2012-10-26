@@ -103,11 +103,11 @@ def buildArch(arch)
 	
 	dest = ensureDir('ffmpeg/' + arch)
 	
-	system_or_exit "cd ffmpeg; make clean"
 	system_or_exit "cd ffmpeg; ./configure #{args}"
 	system_or_exit "cd ffmpeg; make"	
-	
 	moveLibs(dest)	
+	system_or_exit "cd ffmpeg; make clean"
+
 end
 
 def mkLipoArgs(lib)
