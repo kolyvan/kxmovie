@@ -72,11 +72,9 @@ static NSString * errorMessage (kxMovieError errorCode)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define PREFERABLE_AUDIO_FORMAT AV_SAMPLE_FMT_S16
-
 static BOOL audioCodecIsSupported(AVCodecContext *audio)
 {
-    if (audio->sample_fmt == PREFERABLE_AUDIO_FORMAT) {
+    if (audio->sample_fmt == AV_SAMPLE_FMT_S16) {
 
         id<KxAudioManager> audioManager = [KxAudioManager audioManager];
         return  (int)audioManager.samplingRate == audio->sample_rate &&
@@ -663,7 +661,7 @@ static NSData * copyFrameData(UInt8 *src, int linesize, int width, int height)
         id<KxAudioManager> audioManager = [KxAudioManager audioManager];
         swrContext = swr_alloc_set_opts(NULL,
                                         av_get_default_channel_layout(audioManager.numOutputChannels),
-                                        PREFERABLE_AUDIO_FORMAT,
+                                        AV_SAMPLE_FMT_S16,
                                         audioManager.samplingRate,
                                         av_get_default_channel_layout(codecCtx->channels),
                                         codecCtx->sample_fmt,
@@ -887,19 +885,23 @@ static NSData * copyFrameData(UInt8 *src, int linesize, int width, int height)
     if (!_audioFrame->data[0])
         return nil;
     
-    const int bufSize = av_samples_get_buffer_size(NULL,
-                                                   _audioCodecCtx->channels,
-                                                   _audioFrame->nb_samples,
-                                                   _audioCodecCtx->sample_fmt,
-                                                   1);
-    
-    const NSUInteger sizeOfS16 = 2;
     const NSUInteger numChannels = _audioCodecCtx->channels;
-    int numFrames = bufSize / (sizeOfS16 * numChannels);
+    NSInteger numFrames;
     
-    SInt16 * s16p = (SInt16 *)_audioFrame->data[0];
+    void * audioData;
     
     if (_swrContext) {
+        
+        const int bufSize = av_samples_get_buffer_size(NULL,
+                                                       _audioCodecCtx->channels,
+                                                       _audioFrame->nb_samples,
+                                                       _audioCodecCtx->sample_fmt,
+                                                       1);
+        
+        //const NSUInteger sizeOfSample = av_get_bytes_per_sample(_audioCodecCtx->sample_fmt);
+        //numFrames = bufSize / (sizeOfSample * numChannels);
+        
+        NSAssert(bufSize / (av_get_bytes_per_sample(_audioCodecCtx->sample_fmt) * numChannels) == _audioFrame->nb_samples, @"bugcheck");
         
         if (!_swrBuffer || _swrBufferSize < (bufSize * 2)) {
             _swrBufferSize = bufSize * 2;
@@ -910,26 +912,34 @@ static NSData * copyFrameData(UInt8 *src, int linesize, int width, int height)
         
         numFrames = swr_convert(_swrContext,
                                 outbuf,
-                                numFrames * 2,
+                                _audioFrame->nb_samples * 2,
                                 (const uint8_t **)_audioFrame->data,
-                                numFrames);
+                                _audioFrame->nb_samples);
         
         if (numFrames < 0) {
             NSLog(@"fail resample audio");
             return nil;
         }
         
-        s16p = _swrBuffer;
-    }     
+        audioData = _swrBuffer;
+        
+    } else {
+    
+        if (_audioCodecCtx->sample_fmt != AV_SAMPLE_FMT_S16) {
+            NSAssert(false, @"bucheck, audio format is invalid");
+            return nil;
+        }
+        
+        audioData = _audioFrame->data[0];
+        numFrames = _audioFrame->nb_samples;
+    }
     
     const NSUInteger numElements = numFrames * numChannels;
     NSMutableData *data = [NSMutableData dataWithLength:numElements * sizeof(float)];
-        
-    //fillSignal(s16p,frames,numChannels);
+    
     float scale = 1.0 / (float)INT16_MAX ;
-    vDSP_vflt16(s16p, 1, data.mutableBytes, 1, numElements);
+    vDSP_vflt16((SInt16 *)audioData, 1, data.mutableBytes, 1, numElements);
     vDSP_vsmul(data.mutableBytes, 1, &scale, data.mutableBytes, 1, numElements);
-    //fillSignalF(outData,frames,numChannels);
     
     KxAudioFrame *frame = [[KxAudioFrame alloc] init];
     frame.position = av_frame_get_best_effort_timestamp(_audioFrame) * _audioTimeBase;
