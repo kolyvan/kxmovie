@@ -898,9 +898,6 @@ static NSData * copyFrameData(UInt8 *src, int linesize, int width, int height)
                                                        _audioCodecCtx->sample_fmt,
                                                        1);
         
-        //const NSUInteger sizeOfSample = av_get_bytes_per_sample(_audioCodecCtx->sample_fmt);
-        //numFrames = bufSize / (sizeOfSample * numChannels);
-        
         NSAssert(bufSize / (av_get_bytes_per_sample(_audioCodecCtx->sample_fmt) * numChannels) == _audioFrame->nb_samples, @"bugcheck");
         
         if (!_swrBuffer || _swrBufferSize < (bufSize * 2)) {
