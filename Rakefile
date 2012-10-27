@@ -15,7 +15,8 @@ GCC_PATH='/Developer/usr/bin/gcc'
 LIB_PATH='/usr/lib/system'
 PLATOFRM_PATH_SIM ='/iPhoneSimulator.platform'
 PLATOFRM_PATH_IOS ='/iPhoneOS.platform'
-SDK_PATH_SIM ='/Developer/SDKs/iPhoneSimulator5.1.sdk'
+#SDK_PATH_SIM ='/Developer/SDKs/iPhoneSimulator5.1.sdk'
+SDK_PATH_SIM ='/Developer/SDKs/iPhoneSimulator6.0.sdk'
 SDK_PATH_IOS='/Developer/SDKs/iPhoneOS6.0.sdk'
 
 FFMPEG_BUILD_ARGS_SIM = [
