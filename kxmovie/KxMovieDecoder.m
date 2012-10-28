@@ -499,7 +499,7 @@ static NSData * copyFrameData(UInt8 *src, int linesize, int width, int height)
 
 + (void)initialize
 {
-    av_register_all();
+    av_register_all();   
 }
 
 + (id) movieDecoderWithContentPath: (NSString *) path
@@ -892,16 +892,18 @@ static NSData * copyFrameData(UInt8 *src, int linesize, int width, int height)
     
     if (_swrContext) {
         
+        id<KxAudioManager> audioManager = [KxAudioManager audioManager];
+        
+        const NSUInteger ratio = MAX(1, audioManager.samplingRate / _audioCodecCtx->sample_rate) * 2;
+        
         const int bufSize = av_samples_get_buffer_size(NULL,
-                                                       _audioCodecCtx->channels,
-                                                       _audioFrame->nb_samples,
-                                                       _audioCodecCtx->sample_fmt,
+                                                       audioManager.numOutputChannels,
+                                                       _audioFrame->nb_samples * ratio,
+                                                       AV_SAMPLE_FMT_S16,
                                                        1);
         
-        NSAssert(bufSize / (av_get_bytes_per_sample(_audioCodecCtx->sample_fmt) * numChannels) == _audioFrame->nb_samples, @"bugcheck");
-        
-        if (!_swrBuffer || _swrBufferSize < (bufSize * 2)) {
-            _swrBufferSize = bufSize * 2;
+        if (!_swrBuffer || _swrBufferSize < bufSize) {
+            _swrBufferSize = bufSize;
             _swrBuffer = realloc(_swrBuffer, _swrBufferSize);
         }
         
@@ -909,7 +911,7 @@ static NSData * copyFrameData(UInt8 *src, int linesize, int width, int height)
         
         numFrames = swr_convert(_swrContext,
                                 outbuf,
-                                _audioFrame->nb_samples * 2,
+                                _audioFrame->nb_samples * ratio,
                                 (const uint8_t **)_audioFrame->data,
                                 _audioFrame->nb_samples);
         
@@ -917,6 +919,10 @@ static NSData * copyFrameData(UInt8 *src, int linesize, int width, int height)
             NSLog(@"fail resample audio");
             return nil;
         }
+        
+        //int64_t delay = swr_get_delay(_swrContext, audioManager.samplingRate);
+        //if (delay > 0)
+        //    NSLog(@"resample delay %lld", delay);
         
         audioData = _swrBuffer;
         
