@@ -13,7 +13,8 @@
 #import "KxMovieViewController.h"
 
 @interface MainViewController () {
-    NSArray *_movies;
+    NSArray *_localMovies;
+    NSArray *_remoteMovies;
 }
 @property (strong, nonatomic) UITableView *tableView;
 @end
@@ -25,7 +26,19 @@
     self = [super init];
     if (self) {
         self.title = @"Movies";
-        self.tabBarItem = [[UITabBarItem alloc] initWithTabBarSystemItem:UITabBarSystemItemFeatured tag: 0];        
+        self.tabBarItem = [[UITabBarItem alloc] initWithTabBarSystemItem:UITabBarSystemItemFeatured tag: 0];
+        
+        _remoteMovies = @[
+            @"http://www.wowza.com/_h264/BigBuckBunny_175k.mov",
+            // @"http://www.wowza.com/_h264/BigBuckBunny_115k.mov",
+            @"rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov",
+            @"http://santai.tv/vod/test/test_format_1.3gp",
+            @"http://santai.tv/vod/test/test_format_1.mp4",
+        
+            //@"rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov",
+            //@"http://santai.tv/vod/test/BigBuckBunny_175k.mov",
+        ];
+        
     }
     return self;
 }
@@ -112,19 +125,32 @@
         }
     }
     
-    _movies = [ma copy];
+    _localMovies = [ma copy];
 }
 
 #pragma mark - Table view data source
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-    return 1;
+    return 2;
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
+{
+    switch (section) {
+        case 0:     return @"Remote";
+        case 1:     return @"Local";
+    }
+    return @"";
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return _movies.count;
+    switch (section) {
+        case 0:     return _remoteMovies.count;
+        case 1:     return _localMovies.count;
+    }
+    return 0;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -137,7 +163,17 @@
         cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     }
     
-    NSString *path = _movies[indexPath.row];
+    NSString *path;
+    
+    if (indexPath.section == 0) {
+        
+        path = _remoteMovies[indexPath.row];
+        
+    } else {
+        
+        path = _localMovies[indexPath.row];
+    }
+
     cell.textLabel.text = path.lastPathComponent;
     return cell;
 }
@@ -146,7 +182,16 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    NSString *path = _movies[indexPath.row];
+    NSString *path;
+    
+    if (indexPath.section == 0) {
+        
+        path = _remoteMovies[indexPath.row];
+        
+    } else {
+        
+        path = _localMovies[indexPath.row];
+    }
     
     NSError *error;
     KxMovieViewController *vc = [KxMovieViewController movieViewControllerWithContentPath:path
