@@ -70,8 +70,11 @@ enum {
 
 static NSMutableDictionary * gHistory;
 
+#define DEFAULT_DECODE_DURATION   0.1
+#define NETWORK_BUFFERED_DURATION 2.0
+
 @interface KxMovieViewController () {
- 
+
     KxMovieDecoder      *_decoder;    
     dispatch_queue_t    _dispatchQueue;
     NSMutableArray      *_videoFrames;
@@ -103,6 +106,7 @@ static NSMutableDictionary * gHistory;
     UILabel             *_leftLabel;
     UIButton            *_infoButton;
     UITableView         *_tableView;
+    UIActivityIndicatorView *_activityIndicatorView;
     
     UITapGestureRecognizer *_tapGestureRecognizer;
     UITapGestureRecognizer *_doubleTapGestureRecognizer;
@@ -110,8 +114,11 @@ static NSMutableDictionary * gHistory;
         
 #ifdef DEBUG
     UILabel             *_messageLabel;
-    CGFloat             _lastDecodeTime;
 #endif
+
+    CGFloat             _decodeDuration;
+    CGFloat             _bufferedDuration;
+    CGFloat             _minBufferedDuration;
 }
 
 @property (readwrite) BOOL playing;
@@ -126,35 +133,50 @@ static NSMutableDictionary * gHistory;
 }
 
 + (id) movieViewControllerWithContentPath: (NSString *) path
-                                    error: (NSError **) perror
 {
     id<KxAudioManager> audioManager = [KxAudioManager audioManager];
-    [audioManager activateAudioSession];
-    
-    KxMovieDecoder *decoder = [KxMovieDecoder movieDecoderWithContentPath: path error:perror];
-    if (!decoder)
-        return nil;
-    return [[KxMovieViewController alloc] initWithMovieDecoder: decoder];
+    [audioManager activateAudioSession];    
+    return [[KxMovieViewController alloc] initWithContentPath: path];
 }
 
-- (id) initWithMovieDecoder: (KxMovieDecoder *) decoder
+- (id) initWithContentPath: (NSString *) path
 {
+    NSAssert(path.length > 0, @"empty path");
+    
     self = [super initWithNibName:nil bundle:nil];
     if (self) {
         
-        _decoder = decoder;
-        _dispatchQueue = dispatch_queue_create("KxMovie", DISPATCH_QUEUE_SERIAL);
-        _videoFrames = [NSMutableArray array];
-        _audioFrames = [NSMutableArray array];
-        _scheduledLock = [[NSLock alloc] init];
+        _moviePosition = 0;
         _startTime = -1;
         self.wantsFullScreenLayout = YES;
+        
+        __weak KxMovieViewController *weakSelf = self;
+        
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+    
+            NSError *error;
+            KxMovieDecoder *decoder;
+            decoder = [KxMovieDecoder movieDecoderWithContentPath:path error:&error];
+            
+            NSLog(@"movie loaded");
+            
+            __strong KxMovieViewController *strongSelf = weakSelf;
+            if (strongSelf) {
+                
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    
+                    [strongSelf setMovieDecoder:decoder withError:error];                    
+                });
+            }
+        });
     }
     return self;
 }
 
 - (void) dealloc
 {
+    // NSLog(@"%@ dealloc", self);
+    
     [self pause];
     
     [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -167,29 +189,21 @@ static NSMutableDictionary * gHistory;
 
 - (void)loadView
 {
-   CGRect bounds = [[UIScreen mainScreen] applicationFrame];
+    // NSLog(@"loadView");
+    
+    CGRect bounds = [[UIScreen mainScreen] applicationFrame];
     
     self.view = [[UIView alloc] initWithFrame:bounds];
-    self.view.backgroundColor = [UIColor clearColor];
+    self.view.backgroundColor = [UIColor blackColor];
     
-    if (_decoder.validVideo) {
-        _glView = [[KxMovieGLView alloc] initWithFrame:bounds decoder:_decoder];
-    }
+    _activityIndicatorView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle: UIActivityIndicatorViewStyleWhiteLarge];
+    _activityIndicatorView.center = self.view.center;
+    _activityIndicatorView.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
     
-    if (!_glView) {
-        
-        NSLog(@"fallback to use RGB video frame and UIKit");
-        [_decoder setupVideoFrameFormat:KxVideoFrameFormatRGB];
-        _imageView = [[UIImageView alloc] initWithFrame:bounds];
-    }
+    [self.view addSubview:_activityIndicatorView];
     
-    UIView *frameView = [self frameView];
-    frameView.contentMode = UIViewContentModeScaleAspectFit;
-    frameView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleBottomMargin;
-    [self.view addSubview:frameView];
-    
-    CGFloat width = self.view.bounds.size.width;
-    CGFloat height = self.view.bounds.size.height;
+    CGFloat width = bounds.size.width;
+    CGFloat height = bounds.size.height;
     
 #ifdef DEBUG
     _messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(20,40,width-40,40)];
@@ -213,10 +227,10 @@ static NSMutableDictionary * gHistory;
     
     _topHUD.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     _bottomHUD.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleLeftMargin;
-        
+    
     [self.view addSubview:_topHUD];
     [self.view addSubview:_bottomHUD];
-
+    
     // top hud
     
     _doneButton = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -246,7 +260,7 @@ static NSMutableDictionary * gHistory;
               forControlEvents:UIControlEventValueChanged];
     [_progressSlider setThumbImage:[UIImage imageNamed:@"kxmovie.bundle/sliderthumb"]
                           forState:UIControlStateNormal];
-      
+    
     _leftLabel = [[UILabel alloc] initWithFrame:CGRectMake(width-78,5,50,20)];
     _leftLabel.backgroundColor = [UIColor clearColor];
     _leftLabel.opaque = NO;
@@ -262,13 +276,13 @@ static NSMutableDictionary * gHistory;
     _infoButton.showsTouchWhenHighlighted = YES;
     _infoButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
     [_infoButton addTarget:self action:@selector(infoDidTouch:) forControlEvents:UIControlEventTouchUpInside];
-
+    
     [_topHUD addSubview:_doneButton];
-    [_topHUD addSubview:_progressLabel];        
+    [_topHUD addSubview:_progressLabel];
     [_topHUD addSubview:_progressSlider];
     [_topHUD addSubview:_leftLabel];
-    [_topHUD addSubview:_infoButton];    
-   
+    [_topHUD addSubview:_infoButton];
+    
     // bottom hud
     
     width = _bottomHUD.bounds.size.width;
@@ -286,14 +300,14 @@ static NSMutableDictionary * gHistory;
     _playButton.showsTouchWhenHighlighted = YES;
     [_playButton setImage:[UIImage imageNamed:@"kxmovie.bundle/playback_play"] forState:UIControlStateNormal];
     [_playButton addTarget:self action:@selector(playDidTouch:) forControlEvents:UIControlEventTouchUpInside];
-
+    
     _forwardButton = [UIButton buttonWithType:UIButtonTypeCustom];
     _forwardButton.frame = CGRectMake(width * 0.5 + 25, 5, 40, 40);
     _forwardButton.backgroundColor = [UIColor clearColor];
     _forwardButton.showsTouchWhenHighlighted = YES;
     [_forwardButton setImage:[UIImage imageNamed:@"kxmovie.bundle/playback_ff"] forState:UIControlStateNormal];
     [_forwardButton addTarget:self action:@selector(forwardDidTouch:) forControlEvents:UIControlEventTouchUpInside];
-
+    
     _volumeSlider = [[MPVolumeView alloc] initWithFrame:CGRectMake(5, 50, width-(5 * 2), 20)];
     _volumeSlider.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     _volumeSlider.showsRouteButton = NO;
@@ -303,7 +317,7 @@ static NSMutableDictionary * gHistory;
     [_bottomHUD addSubview:_playButton];
     [_bottomHUD addSubview:_forwardButton];
     [_bottomHUD addSubview:_volumeSlider];
-        
+    
     // gradients
     
     CAGradientLayer *gradient;
@@ -341,41 +355,24 @@ static NSMutableDictionary * gHistory;
                           nil];
     [_topHUD.layer insertSublayer:gradient atIndex:0];
     
-    if (!_decoder.validVideo) {
+    if (_decoder) {
         
-        _imageView.image = [UIImage imageNamed:@"kxmovie.bundle/music_icon.png"];
-        _imageView.contentMode = UIViewContentModeCenter;
+        [self setupPresentView];
+        
+    } else {
+        
+        _bottomHUD.hidden = YES;
+        _progressLabel.hidden = YES;
+        _progressSlider.hidden = YES;
+        _leftLabel.hidden = YES;
+        _infoButton.hidden = YES;
     }
-        
-   
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-        
-    UIView *frameView = [self frameView];
-    frameView.userInteractionEnabled = YES;
-    
-    if (_decoder.validVideo) {
-
-        _tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
-        _tapGestureRecognizer.numberOfTapsRequired = 1;
-        
-        _doubleTapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
-        _doubleTapGestureRecognizer.numberOfTapsRequired = 2;
-        
-        [_tapGestureRecognizer requireGestureRecognizerToFail: _doubleTapGestureRecognizer];
-        
-        [frameView addGestureRecognizer:_doubleTapGestureRecognizer];
-        [frameView addGestureRecognizer:_tapGestureRecognizer];
-        
-    }
-        
-    _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
-    _panGestureRecognizer.enabled = NO;
-    
-    [frameView addGestureRecognizer:_panGestureRecognizer];    
+    // [self setupUserInteraction];
 }
 
 - (void)didReceiveMemoryWarning
@@ -385,6 +382,8 @@ static NSMutableDictionary * gHistory;
 
 - (void) viewDidAppear:(BOOL)animated
 {
+    // NSLog(@"viewDidAppear");
+    
     [super viewDidAppear:animated];
     
     if (self.presentingViewController)
@@ -395,12 +394,16 @@ static NSMutableDictionary * gHistory;
     
     [self showHUD: YES];
     
-    NSNumber *n = [gHistory valueForKey:_decoder.path];
-    if (n)
-        [self updatePosition:n.floatValue playMode:YES];
-    else
-        [self play];
-     
+    if (_decoder) {
+        
+        [self restorePlay];
+        
+    } else {
+
+        [_activityIndicatorView startAnimating];
+    }
+   
+        
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(applicationWillResignActive:)
                                                  name:UIApplicationWillResignActiveNotification
@@ -413,19 +416,25 @@ static NSMutableDictionary * gHistory;
     
     [super viewWillDisappear:animated];
     
-    [self pause];
+    [_activityIndicatorView stopAnimating];
+    
+    if (_decoder) {
+        
+        [self pause];
+        
+        if (_moviePosition == 0 || _decoder.isEOF)
+            [gHistory removeObjectForKey:_decoder.path];
+        else
+            [gHistory setValue:[NSNumber numberWithFloat:_moviePosition]
+                        forKey:_decoder.path];
+    }
     
     if (_fullscreen)
         [self fullscreenMode:NO];
     
     if (_hiddenHUD)
         [[UIApplication sharedApplication] setIdleTimerDisabled:NO];
-
-    if (_moviePosition == 0 || _decoder.isEOF)
-        [gHistory removeObjectForKey:_decoder.path];
-    else
-        [gHistory setValue:[NSNumber numberWithFloat:_moviePosition]
-                    forKey:_decoder.path];
+    
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
@@ -498,12 +507,8 @@ static NSMutableDictionary * gHistory;
     _startTime = -1;
     _disableUpdateHUD = NO;
     
-#ifdef DEBUG
-    _lastDecodeTime = -1;
-#endif
-        
     [self decodeFrames];
-    [self scheduleDecodeFrames];    
+    [self scheduleDecodeFrames];
     [self updatePlayButton];
     
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, 0.01 * NSEC_PER_SEC);
@@ -520,6 +525,7 @@ static NSMutableDictionary * gHistory;
         return;
         
     self.playing = NO;
+   // [_decoder pause];
     [self enableAudio:NO];
     [self updatePlayButton];
     NSLog(@"movie pause");
@@ -592,6 +598,124 @@ static NSMutableDictionary * gHistory;
 
 #pragma mark - private
 
+- (void) setMovieDecoder: (KxMovieDecoder *) decoder
+               withError: (NSError *) error
+{
+    NSLog(@"setMovieDecoder");
+    
+    if (decoder) {
+        
+        _decoder        = decoder;
+        _dispatchQueue  = dispatch_queue_create("KxMovie", DISPATCH_QUEUE_SERIAL);
+        _videoFrames    = [NSMutableArray array];
+        _audioFrames    = [NSMutableArray array];
+        _scheduledLock  = [[NSLock alloc] init];
+        
+        _decodeDuration = DEFAULT_DECODE_DURATION;
+        _minBufferedDuration = _decoder.isNetwork ? NETWORK_BUFFERED_DURATION : DEFAULT_DECODE_DURATION;
+        
+        if (!_decoder.validVideo) {
+            
+            _decodeDuration *= 10.0;
+            _minBufferedDuration *= 10.0;
+        }
+        
+        if (self.isViewLoaded) {
+            
+            [self setupPresentView];
+            
+            _bottomHUD.hidden       = NO;
+            _progressLabel.hidden   = NO;
+            _progressSlider.hidden  = NO;
+            _leftLabel.hidden       = NO;
+            _infoButton.hidden      = NO;
+            
+            if (_activityIndicatorView.isAnimating) {
+                
+                [_activityIndicatorView stopAnimating];
+                // if (self.view.window)
+                [self restorePlay];
+            }
+        }
+        
+    } else {
+        
+         if (self.isViewLoaded && self.view.window) {
+        
+             [self handleDecoderMovieError: error];
+         }
+    }
+}
+
+- (void) restorePlay
+{
+    // NSLog(@"restorePlay");
+    
+    NSNumber *n = [gHistory valueForKey:_decoder.path];
+    if (n)
+        [self updatePosition:n.floatValue playMode:YES];
+    else
+        [self play];    
+}
+
+- (void) setupPresentView
+{
+    // NSLog(@"setupPresentView");
+    
+    CGRect bounds = self.view.bounds;
+    
+    if (_decoder.validVideo) {
+        _glView = [[KxMovieGLView alloc] initWithFrame:bounds decoder:_decoder];
+    }
+    
+    if (!_glView) {
+        
+        NSLog(@"fallback to use RGB video frame and UIKit");
+        [_decoder setupVideoFrameFormat:KxVideoFrameFormatRGB];
+        _imageView = [[UIImageView alloc] initWithFrame:bounds];
+    }
+    
+    UIView *frameView = [self frameView];
+    frameView.contentMode = UIViewContentModeScaleAspectFit;
+    frameView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleBottomMargin;
+    
+    [self.view insertSubview:frameView atIndex:0];
+        
+    if (_decoder.validVideo) {
+    
+        [self setupUserInteraction];
+    
+    } else {
+        
+        _imageView.image = [UIImage imageNamed:@"kxmovie.bundle/music_icon.png"];
+        _imageView.contentMode = UIViewContentModeCenter;
+    }
+    
+    self.view.backgroundColor = [UIColor clearColor];
+}
+
+- (void) setupUserInteraction
+{
+    UIView * view = [self frameView];
+    view.userInteractionEnabled = YES;
+    
+    _tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
+    _tapGestureRecognizer.numberOfTapsRequired = 1;
+    
+    _doubleTapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
+    _doubleTapGestureRecognizer.numberOfTapsRequired = 2;
+    
+    [_tapGestureRecognizer requireGestureRecognizerToFail: _doubleTapGestureRecognizer];
+    
+    [view addGestureRecognizer:_doubleTapGestureRecognizer];
+    [view addGestureRecognizer:_tapGestureRecognizer];
+    
+    _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
+    _panGestureRecognizer.enabled = NO;
+    
+    [view addGestureRecognizer:_panGestureRecognizer];
+}
+
 - (UIView *) frameView
 {
     return _glView ? _glView : _imageView;
@@ -641,6 +765,7 @@ static NSMutableDictionary * gHistory;
                             
                             [_audioFrames removeObjectAtIndex:0];
                             _moviePosition = frame.position;
+                            _bufferedDuration -= frame.duration;
                         }
                         
                         _currentAudioFramePos = 0;
@@ -707,19 +832,10 @@ static NSMutableDictionary * gHistory;
     
     if (_decoder.validVideo ||
         _decoder.validAudio) {
-
-#ifdef DEBUG
-        NSTimeInterval ts = [NSDate timeIntervalSinceReferenceDate];
-#endif
-
-        @synchronized (_decoder) {
-            frames = [_decoder decodeFrames];
-        }
         
-#ifdef DEBUG
-        NSTimeInterval frameTime = [NSDate timeIntervalSinceReferenceDate] - ts;
-        _lastDecodeTime = _lastDecodeTime < 0 ? frameTime : frameTime * 0.6 + _lastDecodeTime * 0.4;
-#endif
+        @synchronized (_decoder) {
+            frames = [_decoder decodeFrames: _decodeDuration];
+        }
     }
     
     if (frames.count == 0)
@@ -730,8 +846,10 @@ static NSMutableDictionary * gHistory;
         @synchronized(_videoFrames) {
             
             for (KxMovieFrame *frame in frames)
-                if (frame.type == KxMovieFrameTypeVideo)
+                if (frame.type == KxMovieFrameTypeVideo) {
                     [_videoFrames addObject:frame];
+                    _bufferedDuration += frame.duration;                    
+                }
         }
     }
     
@@ -744,74 +862,78 @@ static NSMutableDictionary * gHistory;
             if (_audioFrames.count < 1024) {
                 
                 for (KxMovieFrame *frame in frames)
-                    if (frame.type == KxMovieFrameTypeAudio)
+                    if (frame.type == KxMovieFrameTypeAudio) {
                         [_audioFrames addObject:frame];
+                        if (!_decoder.validVideo)
+                            _bufferedDuration += frame.duration;
+                    }
             }
         }
     }    
 }
 
-- (void) incrScheduledDecode: (BOOL) incr
-{
-    [_scheduledLock lock];
-    _scheduledDecode += (incr ? 1 : -1);
-    [_scheduledLock unlock];
-}
-
-- (BOOL) compareScheduledDecode: (NSInteger) value
-{
-    BOOL result = NO;
-    [_scheduledLock lock];
-    result = _scheduledDecode < value;
-    [_scheduledLock unlock];
-    return result;
-}
-
 - (void) scheduleDecodeFrames
-{
-    [self incrScheduledDecode: YES];
-    dispatch_async(_dispatchQueue, ^{
+{    
+    BOOL canSchedule = NO;
     
-        if (self.playing)
-            [self decodeFrames];
-        [self incrScheduledDecode: NO];
-    });
+    [_scheduledLock lock];
+    if (_scheduledDecode < 1) {
+        
+        canSchedule = YES;
+        ++_scheduledDecode;
+    }    
+    [_scheduledLock unlock];
+    
+    if (canSchedule) {
+        
+        dispatch_async(_dispatchQueue, ^{
+            
+            if (self.playing)
+                [self decodeFrames];
+            
+            [_scheduledLock lock];
+            _scheduledDecode--;
+            [_scheduledLock unlock];
+        });
+    }
 }
 
 - (void) tick
 {
+    if (!self.playing)
+        return;
+    
     CGFloat interval = [self presentFrame];
     
-    if (_decoder.isEOF) {
-        
-        if ((_decoder.validVideo && _videoFrames.count == 0) ||
-            (_decoder.validAudio && _audioFrames.count == 0)) {
-        
+    const NSUInteger leftFrames =
+        (_decoder.validVideo ? _videoFrames.count : 0) +
+        (_decoder.validAudio ? _audioFrames.count : 0);
+    
+    if (0 == leftFrames) {
+    
+        if (_decoder.isEOF) {
+            
             [self pause];
-        }
-        
-    } else if (self.playing &&
-              (_videoFrames.count < 2) &&
-              [self compareScheduledDecode: 2]) {
+            [self updateHUD];
+            return;
+        } 
+    }
+    
+    if (_bufferedDuration < _minBufferedDuration) {
         
         [self scheduleDecodeFrames];
     }
     
+    NSTimeInterval destTime = _startTime + _moviePosition + interval;
+    NSTimeInterval diffTime = destTime - [NSDate timeIntervalSinceReferenceDate];
+    diffTime = MAX(diffTime, 0.02);
+    //NSLog(@"next tick %f", diffTime);
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, diffTime * NSEC_PER_SEC);
+    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+        [self tick];
+    });
+        
     [self updateHUD];
-    
-    if (self.playing) {
-        
-        NSTimeInterval destTime = _startTime + _moviePosition + interval;
-        NSTimeInterval diffTime = destTime - [NSDate timeIntervalSinceReferenceDate];
-        diffTime = MAX(diffTime, 0.01);
-        
-        //NSLog(@"next tick %f", diffTime);
-                
-        dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, diffTime * NSEC_PER_SEC);
-        dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
-            [self tick];
-        });
-    }
 }
 
 - (CGFloat) presentFrame
@@ -828,6 +950,7 @@ static NSMutableDictionary * gHistory;
                 
                 frame = _videoFrames[0];
                 [_videoFrames removeObjectAtIndex:0];
+                _bufferedDuration -= frame.duration;
             }
         }
         
@@ -836,19 +959,13 @@ static NSMutableDictionary * gHistory;
         
     } else {
 
-        @synchronized(_audioFrames) {
-            
-            for (KxAudioFrame *frame in _audioFrames)
-                interval += frame.duration;
-            interval *= 0.5;
-        }
+        //interval = _bufferedDuration * 0.5;
     }
     
     if (self.playing && _startTime < 0) {
         _startTime = [NSDate timeIntervalSinceReferenceDate] - _moviePosition;
-        if (_decoder.validAudio) {
+        if (_decoder.validAudio)
             [self enableAudio:YES];
-        }
     }
     
     return interval;
@@ -908,12 +1025,11 @@ static NSMutableDictionary * gHistory;
     _leftLabel.text = formatTimeInterval(duration - _moviePosition, YES);
             
 #ifdef DEBUG
-    _messageLabel.text = [NSString stringWithFormat:@"%d %d %d - %.1f %d %@",
+    _messageLabel.text = [NSString stringWithFormat:@"%d %d %d - %@ %@",
                           _videoFrames.count,
                           _audioFrames.count,
                           _scheduledDecode,
-                          [NSDate timeIntervalSinceReferenceDate] - _startTime,
-                          (int)(1.0 / _lastDecodeTime),
+                          formatTimeInterval([NSDate timeIntervalSinceReferenceDate] - _startTime, NO),
                           _decoder.isEOF ? @"- END" : @""];
 #endif
     
@@ -963,6 +1079,8 @@ static NSMutableDictionary * gHistory;
         [_audioFrames removeAllObjects];
         _currentAudioFrame = nil;
     }
+    
+    _bufferedDuration = 0;
     
     position = MIN(_decoder.duration - 1, MAX(0, position));
     
@@ -1057,6 +1175,17 @@ static NSMutableDictionary * gHistory;
     _tableView.frame = CGRectMake(0,size.height,size.width,size.height - Y);
     
     [self.view addSubview:_tableView];   
+}
+
+- (void) handleDecoderMovieError: (NSError *) error
+{
+    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Failure", nil)
+                                                        message:[error description]
+                                                       delegate:nil
+                                              cancelButtonTitle:NSLocalizedString(@"Ok", nil)
+                                              otherButtonTitles:nil];
+    
+    [alertView show];
 }
 
 #pragma mark - Table view data source

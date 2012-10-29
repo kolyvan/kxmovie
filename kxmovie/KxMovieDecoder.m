@@ -258,6 +258,17 @@ static NSData * copyFrameData(UInt8 *src, int linesize, int width, int height)
     return md;
 }
 
+static BOOL isNetworkPath (NSString *path)
+{
+    NSRange r = [path rangeOfString:@":"];
+    if (r.location == NSNotFound)
+        return NO;
+    NSString *scheme = [path substringToIndex:r.length];
+    if ([scheme isEqualToString:@"file"])
+        return NO;
+    return YES;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 @interface KxMovieFrame()
@@ -524,6 +535,15 @@ static NSData * copyFrameData(UInt8 *src, int linesize, int width, int height)
 {
     NSAssert(path, @"nil path");
     NSAssert(!_formatCtx, @"already open");
+    
+    _isNetwork = isNetworkPath(path);
+    
+    static BOOL needNetworkInit = YES;
+    if (needNetworkInit && _isNetwork) {
+        
+        needNetworkInit = NO;
+        avformat_network_init();
+    }
     
     _path = path;
     
@@ -975,7 +995,7 @@ static NSData * copyFrameData(UInt8 *src, int linesize, int width, int height)
     return _videoFrameFormat == format;
 }
 
-- (NSArray *) decodeFrames
+- (NSArray *) decodeFrames: (CGFloat) minDuration
 {
     if (_videoStream == -1 &&
         _audioStream == -1)
@@ -985,7 +1005,7 @@ static NSData * copyFrameData(UInt8 *src, int linesize, int width, int height)
     
     AVPacket packet;
     
-    CGFloat audioDuration = 0;
+    CGFloat decodedDuration = 0;
     
     BOOL finished = NO;
     
@@ -1020,9 +1040,11 @@ static NSData * copyFrameData(UInt8 *src, int linesize, int width, int height)
                         
                         [result addObject:frame];
                         
-                        finished = YES;                    
-                        _position = frame.position;                        
-                    }                    
+                        _position = frame.position;
+                        decodedDuration += frame.duration;
+                        if (decodedDuration > minDuration)
+                            finished = YES;
+                    }
                 }
                 
                 if (0 == len)
@@ -1058,8 +1080,8 @@ static NSData * copyFrameData(UInt8 *src, int linesize, int width, int height)
                         if (_videoStream == -1) {
                             
                             _position = frame.position;
-                            audioDuration += frame.duration;
-                            if (audioDuration > 0.5)
+                            decodedDuration += frame.duration;
+                            if (decodedDuration > minDuration)
                                 finished = YES;
                         }
                     }

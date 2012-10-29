@@ -192,26 +192,10 @@
         
         path = _localMovies[indexPath.row];
     }
-    
-    NSError *error;
-    KxMovieViewController *vc = [KxMovieViewController movieViewControllerWithContentPath:path
-                                                                                    error:&error];
-    
-    if (error) {
-        
-        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Failure"
-                                                            message:[error description]
-                                                           delegate:nil
-                                                  cancelButtonTitle:@"Ok"
-                                                  otherButtonTitles:nil];
-        
-        [alertView show];
-        
-    } else {
 
-        [self presentViewController:vc animated:YES completion:nil];
-        //[self.navigationController pushViewController:vc animated:YES];
-    }
+    KxMovieViewController *vc = [KxMovieViewController movieViewControllerWithContentPath:path];
+    [self presentViewController:vc animated:YES completion:nil];
+    //[self.navigationController pushViewController:vc animated:YES];    
 }
 
 @end

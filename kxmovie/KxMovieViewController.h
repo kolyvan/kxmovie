@@ -16,8 +16,7 @@
 
 @interface KxMovieViewController : UIViewController<UITableViewDataSource, UITableViewDelegate>
 
-+ (id) movieViewControllerWithContentPath: (NSString *) path
-                                    error: (NSError **) perror;
++ (id) movieViewControllerWithContentPath: (NSString *) path;
 
 @property (readonly) BOOL playing;
 

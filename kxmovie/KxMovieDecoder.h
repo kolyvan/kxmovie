@@ -86,12 +86,13 @@ typedef enum {
 @property (readonly, nonatomic) BOOL validAudio;
 @property (readonly, nonatomic) NSDictionary *info;
 @property (readonly, nonatomic) NSString* videoStreamFormatName;
+@property (readonly, nonatomic) BOOL isNetwork;
 
 + (id) movieDecoderWithContentPath: (NSString *) path
                              error: (NSError **) perror;
 
 - (BOOL) setupVideoFrameFormat: (KxVideoFrameFormat) format;
 
-- (NSArray *) decodeFrames;
+- (NSArray *) decodeFrames: (CGFloat) minDuration;
 
 @end
