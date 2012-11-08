@@ -905,16 +905,17 @@ static BOOL isNetworkPath (NSString *path)
     if (!_audioFrame->data[0])
         return nil;
     
-    const NSUInteger numChannels = _audioCodecCtx->channels;
+    id<KxAudioManager> audioManager = [KxAudioManager audioManager];
+    
+    const NSUInteger numChannels = audioManager.numOutputChannels;
     NSInteger numFrames;
     
     void * audioData;
     
     if (_swrContext) {
         
-        id<KxAudioManager> audioManager = [KxAudioManager audioManager];
-        
-        const NSUInteger ratio = MAX(1, audioManager.samplingRate / _audioCodecCtx->sample_rate) * 2;
+        const NSUInteger ratio = MAX(1, audioManager.samplingRate / _audioCodecCtx->sample_rate) *
+                                 MAX(1, audioManager.numOutputChannels / _audioCodecCtx->channels) * 2;
         
         const int bufSize = av_samples_get_buffer_size(NULL,
                                                        audioManager.numOutputChannels,
