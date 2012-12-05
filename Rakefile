@@ -28,11 +28,19 @@ FFMPEG_BUILD_ARGS_SIM = [
 "--extra-cflags='-arch i386'",
 ]
 
-FFMPEG_BUILD_ARGS_IOS = [
+FFMPEG_BUILD_ARGS_ARMV7 = [
 '--arch=arm',
 '--cpu=cortex-a8',
 "--extra-cflags='-arch armv7'",
 "--extra-ldflags='-arch armv7'",
+'--enable-pic',
+]
+
+FFMPEG_BUILD_ARGS_ARMV7S = [
+'--arch=arm',
+'--cpu=cortex-a8',
+"--extra-cflags='-arch armv7s'",
+"--extra-ldflags='-arch armv7s'",
 '--enable-pic',
 ]
 
@@ -97,7 +105,9 @@ def buildArch(arch)
 	when 'i386'
 		args = mkArgs(PLATOFRM_PATH_SIM, SDK_PATH_SIM, FFMPEG_BUILD_ARGS_SIM)
 	when 'armv7'
-		args = mkArgs(PLATOFRM_PATH_IOS, SDK_PATH_IOS, FFMPEG_BUILD_ARGS_IOS)
+		args = mkArgs(PLATOFRM_PATH_IOS, SDK_PATH_IOS, FFMPEG_BUILD_ARGS_ARMV7)
+	when 'armv7s'
+		args = mkArgs(PLATOFRM_PATH_IOS, SDK_PATH_IOS, FFMPEG_BUILD_ARGS_ARMV7S)		
 	else
 		raise "Build failed: unknown arch: #{arch}"
 	end
@@ -112,7 +122,7 @@ def buildArch(arch)
 end
 
 def mkLipoArgs(lib)
-	"-create -arch armv7 armv7/#{lib}.a -arch i386 i386/#{lib}.a -output universal/#{lib}.a"
+	"-create -arch armv7 armv7/#{lib}.a -arch armv7 armv7s/#{lib}.a -arch i386 i386/#{lib}.a -output universal/#{lib}.a"
 end
 
 desc "check gas-preprocessor.pl"
@@ -147,6 +157,11 @@ end
 desc "Build ffmpeg armv7 libs"
 task :build_ffmpeg_armv7 do	
 	buildArch('armv7')	
+end
+
+desc "Build ffmpeg armv7s libs"
+task :build_ffmpeg_armv7s do	
+	buildArch('armv7s')	
 end
 
 desc "Build ffmpeg universal libs"
@@ -188,23 +203,31 @@ end
 desc "Build libkxmovie-debug"
 task :build_movie_debug do
 	buildDir = Pathname.new 'tmp/build'
-	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Debug -sdk iphoneos6.0 build SYMROOT=#{buildDir}"	
+	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Debug -sdk iphoneos6.0 build SYMROOT=#{buildDir} -arch armv7s"			
+	FileUtils.move Pathname.new('tmp/build/Debug-iphoneos/libkxmovie.a'), Pathname.new('tmp/build/Debug-iphoneos/libkxmovie_armv7s.a')	
+
+	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Debug -sdk iphoneos6.0 build SYMROOT=#{buildDir} -arch armv7"		
 	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Debug -sdk iphonesimulator6.0 build SYMROOT=#{buildDir}"	
-	system_or_exit "lipo -create -arch armv7 tmp/build/Debug-iphoneos/libkxmovie.a -arch i386 tmp/build/Debug-iphonesimulator/libkxmovie.a -output tmp/build/libkxmovie.a"
+	system_or_exit "lipo -create -arch armv7 tmp/build/Debug-iphoneos/libkxmovie.a -arch armv7 tmp/build/Debug-iphoneos/libkxmovie_armv7s.a -arch i386 tmp/build/Debug-iphonesimulator/libkxmovie.a -output tmp/build/libkxmovie.a"
 end
 
 desc "Build libkxmovie-release"
 task :build_movie_release do
 	buildDir = Pathname.new 'tmp/build'
-	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Release -sdk iphoneos6.0 build SYMROOT=#{buildDir}"
-	#system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Release -sdk iphonesimulator6.0 build SYMROOT=#{buildDir}"	
-	FileUtils.copy Pathname.new('tmp/build/Release-iphoneos/libkxmovie.a'), buildDir
+	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Release -sdk iphoneos6.0 build SYMROOT=#{buildDir} -arch armv7s"	
+	FileUtils.move Pathname.new('tmp/build/Release-iphoneos/libkxmovie.a'), Pathname.new('tmp/build/Release-iphoneos/libkxmovie_armv7s.a')	
+
+	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Release -sdk iphoneos6.0 build SYMROOT=#{buildDir} -arch armv7"	
+	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Debug -sdk iphonesimulator6.0 build SYMROOT=#{buildDir}"	
+	system_or_exit "lipo -create -arch armv7 tmp/build/Release-iphoneos/libkxmovie.a -arch armv7 tmp/build/Release-iphoneos/libkxmovie_armv7s.a -arch i386 tmp/build/Debug-iphonesimulator/libkxmovie.a -output tmp/build/libkxmovie.a"
+	
+	#FileUtils.copy Pathname.new('tmp/build/Release-iphoneos/libkxmovie.a'), buildDir
 end
 
 desc "Copy to output folder"
 task :copy_movie do	
 	dest = ensureDir 'output'
-	FileUtils.move Pathname.new('tmp/build/libkxmovie.a'), dest
+	FileUtils.move Pathname.new('tmp/build/libkxmovie.a'), dest	
 	FileUtils.copy Pathname.new('libs/libavutil.a'), dest
 	FileUtils.copy Pathname.new('kxmovie/KxMovieViewController.h'), dest	
 	FileUtils.copy Pathname.new('kxmovie/KxAudioManager.h'), dest	
@@ -214,8 +237,8 @@ end
 
 ##
 task :clean => [:clean_movie_debug, :clean_movie_release, :clean_ffmpeg]
-task :build_ffmpeg => [:check_gas_preprocessor, :build_ffmpeg_i386, :build_ffmpeg_armv7, :build_ffmpeg_universal]
-task :build_movie => [:build_movie_debug, :copy_movie] 
-#task :build_movie => [:build_movie_release, :copy_movie] 
+task :build_ffmpeg => [:check_gas_preprocessor, :build_ffmpeg_i386, :build_ffmpeg_armv7, :build_ffmpeg_armv7s, :build_ffmpeg_universal]
+#task :build_movie => [:build_movie_debug, :copy_movie] 
+task :build_movie => [:build_movie_release, :copy_movie] 
 task :build_all => [:build_ffmpeg, :build_movie] 
 task :default => [:build_all]
