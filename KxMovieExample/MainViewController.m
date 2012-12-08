@@ -196,7 +196,7 @@
 
     KxMovieViewController *vc = [KxMovieViewController movieViewControllerWithContentPath:path];
     vc.isFullscreen = YES;
-    vc.isLive = NO;
+    vc.isLive = YES;
     [vc fullscreenMode:NO];
     vc.name = @"一部电影";
     [self presentViewController:vc animated:YES completion:nil];

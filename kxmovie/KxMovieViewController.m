@@ -229,7 +229,7 @@ static NSMutableDictionary * gHistory;
     _bottomHUD.opaque = NO;
     
     _topHUD.frame = CGRectMake(0,0,width,35);
-    _bottomHUD.frame = CGRectMake(30,height-(75+15),width-(30*2),55);
+    _bottomHUD.frame = CGRectMake(30,height-70,width-(30*2),55);
     
     _topHUD.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     _bottomHUD.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleLeftMargin;
@@ -253,7 +253,7 @@ static NSMutableDictionary * gHistory;
     _doneButton.showsTouchWhenHighlighted = YES;
     [_doneButton addTarget:self action:@selector(doneDidTouch:) forControlEvents:UIControlEventTouchUpInside];
     
-    _progressLabel = [[UILabel alloc] initWithFrame:CGRectMake(0,50,105,30)];
+    _progressLabel = [[UILabel alloc] initWithFrame:CGRectMake(0,-30,105,30)];
     _progressLabel.backgroundColor = [UIColor clearColor];
     _progressLabel.opaque = NO;
     _progressLabel.adjustsFontSizeToFitWidth = NO;
@@ -262,7 +262,7 @@ static NSMutableDictionary * gHistory;
     _progressLabel.text = @"";
     _progressLabel.font = [UIFont systemFontOfSize:13];
     
-    _progressSlider = [[UISlider alloc] initWithFrame:CGRectMake(65,54,width-175,20)];
+    _progressSlider = [[UISlider alloc] initWithFrame:CGRectMake(65,-26,width-175,20)];
     _progressSlider.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     _progressSlider.continuous = NO;
     _progressSlider.value = 0;
