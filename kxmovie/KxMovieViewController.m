@@ -446,7 +446,7 @@ static NSMutableDictionary * gHistory;
 - (void) viewWillDisappear:(BOOL)animated
 {    
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-    
+    [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:UIStatusBarAnimationNone];
     [super viewWillDisappear:animated];
     
     [_activityIndicatorView stopAnimating];
