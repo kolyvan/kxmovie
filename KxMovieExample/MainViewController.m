@@ -195,6 +195,10 @@
     }
 
     KxMovieViewController *vc = [KxMovieViewController movieViewControllerWithContentPath:path];
+    vc.isFullscreen = YES;
+    vc.hasProcessbar = YES;
+    [vc fullscreenMode:NO];
+    vc.name = @"一部电影";
     [self presentViewController:vc animated:YES completion:nil];
     //[self.navigationController pushViewController:vc animated:YES];    
 }

@@ -19,8 +19,12 @@
 + (id) movieViewControllerWithContentPath: (NSString *) path;
 
 @property (readonly) BOOL playing;
+@property (readwrite) BOOL isFullscreen;
+@property (readwrite) BOOL hasProcessbar;
+@property (nonatomic, retain) NSString *name;
 
 - (void) play;
 - (void) pause;
+- (void) fullscreenMode: (BOOL) on;
 
 @end

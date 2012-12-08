@@ -104,6 +104,7 @@ static NSMutableDictionary * gHistory;
     UIButton            *_doneButton;
     UILabel             *_progressLabel;
     UILabel             *_leftLabel;
+    UILabel             *titleLabel;
     UIButton            *_infoButton;
     UITableView         *_tableView;
     UIActivityIndicatorView *_activityIndicatorView;
@@ -126,6 +127,8 @@ static NSMutableDictionary * gHistory;
 
 @implementation KxMovieViewController
 
+@synthesize hasProcessbar, isFullscreen, name;
+
 + (void)initialize
 {
     if (!gHistory)
@@ -141,10 +144,13 @@ static NSMutableDictionary * gHistory;
 
 - (id) initWithContentPath: (NSString *) path
 {
+
     NSAssert(path.length > 0, @"empty path");
     
     self = [super initWithNibName:nil bundle:nil];
     if (self) {
+        hasProcessbar = YES;
+        isFullscreen = NO;
         
         _moviePosition = 0;
         _startTime = -1;
@@ -213,7 +219,7 @@ static NSMutableDictionary * gHistory;
     _messageLabel.numberOfLines = 2;
     _messageLabel.textAlignment = NSTextAlignmentCenter;
     _messageLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-    [self.view addSubview:_messageLabel];
+    //[self.view addSubview:_messageLabel];
 #endif
     
     _topHUD      = [[HudView alloc] initWithFrame:CGRectMake(0,0,0,0)];
@@ -222,36 +228,41 @@ static NSMutableDictionary * gHistory;
     _topHUD.opaque = NO;
     _bottomHUD.opaque = NO;
     
-    _topHUD.frame = CGRectMake(0,0,width,30);
-    _bottomHUD.frame = CGRectMake(30,height-(75+15),width-(30*2),75);
+    _topHUD.frame = CGRectMake(0,0,width,35);
+    _bottomHUD.frame = CGRectMake(30,height-(75+15),width-(30*2),55);
     
     _topHUD.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     _bottomHUD.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleLeftMargin;
-    
     [self.view addSubview:_topHUD];
     [self.view addSubview:_bottomHUD];
     
+    _topHUD.backgroundColor = [UIColor darkGrayColor];
     // top hud
     
     _doneButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    _doneButton.frame = CGRectMake(0,4,50,24);
+    _doneButton.frame = CGRectMake(10,0,50,30);
     _doneButton.backgroundColor = [UIColor clearColor];
+    _doneButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
+    _doneButton.autoresizingMask = UIViewAutoresizingFlexibleHeight;
+    _doneButton.contentVerticalAlignment = UIControlContentHorizontalAlignmentCenter;
+
+    //_doneButton.ti
     [_doneButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    [_doneButton setTitle:NSLocalizedString(@"Done", nil) forState:UIControlStateNormal];
-    _doneButton.titleLabel.font = [UIFont systemFontOfSize:12];
+    [_doneButton setTitle:NSLocalizedString(@"返回", nil) forState:UIControlStateNormal];
+    _doneButton.titleLabel.font = [UIFont systemFontOfSize:13];
     _doneButton.showsTouchWhenHighlighted = YES;
     [_doneButton addTarget:self action:@selector(doneDidTouch:) forControlEvents:UIControlEventTouchUpInside];
     
-    _progressLabel = [[UILabel alloc] initWithFrame:CGRectMake(48,5,45,20)];
+    _progressLabel = [[UILabel alloc] initWithFrame:CGRectMake(0,50,105,30)];
     _progressLabel.backgroundColor = [UIColor clearColor];
     _progressLabel.opaque = NO;
     _progressLabel.adjustsFontSizeToFitWidth = NO;
-    _progressLabel.textAlignment = UITextAlignmentRight;
+    _progressLabel.textAlignment = UITextAlignmentLeft;
     _progressLabel.textColor = [UIColor whiteColor];
-    _progressLabel.text = @"0:00:00";
-    _progressLabel.font = [UIFont systemFontOfSize:12];
+    _progressLabel.text = @"";
+    _progressLabel.font = [UIFont systemFontOfSize:13];
     
-    _progressSlider = [[UISlider alloc] initWithFrame:CGRectMake(95,4,width-175,20)];
+    _progressSlider = [[UISlider alloc] initWithFrame:CGRectMake(65,54,width-175,20)];
     _progressSlider.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     _progressSlider.continuous = NO;
     _progressSlider.value = 0;
@@ -261,16 +272,17 @@ static NSMutableDictionary * gHistory;
     [_progressSlider setThumbImage:[UIImage imageNamed:@"kxmovie.bundle/sliderthumb"]
                           forState:UIControlStateNormal];
     
-    _leftLabel = [[UILabel alloc] initWithFrame:CGRectMake(width-78,5,50,20)];
-    _leftLabel.backgroundColor = [UIColor clearColor];
-    _leftLabel.opaque = NO;
-    _leftLabel.adjustsFontSizeToFitWidth = NO;
-    _leftLabel.textAlignment = UITextAlignmentLeft;
-    _leftLabel.textColor = [UIColor whiteColor];
-    _leftLabel.text = @"-99:59:59";
-    _leftLabel.font = [UIFont systemFontOfSize:12];
-    _leftLabel.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
-    
+    titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(100,0, 100,35)];
+    titleLabel.backgroundColor = [UIColor clearColor];
+    titleLabel.adjustsFontSizeToFitWidth = YES;
+    titleLabel.textAlignment = UITextAlignmentLeft;
+    titleLabel.textColor = [UIColor whiteColor];
+    NSString *tmpString = @" 正在播放: ";
+    titleLabel.text = [tmpString stringByAppendingString:self.name];
+    titleLabel.font = [UIFont systemFontOfSize:13];
+    titleLabel.autoresizingMask = UIViewAutoresizingFlexibleHeight;
+    [_topHUD addSubview:titleLabel];
+
     _infoButton = [UIButton buttonWithType:UIButtonTypeInfoDark];
     _infoButton.frame = CGRectMake(width-25,5,20,20);
     _infoButton.showsTouchWhenHighlighted = YES;
@@ -278,10 +290,17 @@ static NSMutableDictionary * gHistory;
     [_infoButton addTarget:self action:@selector(infoDidTouch:) forControlEvents:UIControlEventTouchUpInside];
     
     [_topHUD addSubview:_doneButton];
-    [_topHUD addSubview:_progressLabel];
-    [_topHUD addSubview:_progressSlider];
-    [_topHUD addSubview:_leftLabel];
-    [_topHUD addSubview:_infoButton];
+    if(self.hasProcessbar){
+        NSLog(@"has process bar");
+        [_bottomHUD addSubview:_progressLabel];
+        [_bottomHUD addSubview:_progressSlider];
+    }
+    else{
+        _progressSlider.hidden = YES;
+    }
+
+    //[_topHUD addSubview:_leftLabel];
+    //[_topHUD addSubview:_infoButton];
     
     // bottom hud
     
@@ -353,6 +372,7 @@ static NSMutableDictionary * gHistory;
                           [NSNumber numberWithFloat:0.0f],
                           [NSNumber numberWithFloat:0.5],
                           nil];
+    if(hasProcessbar)
     [_topHUD.layer insertSublayer:gradient atIndex:0];
     
     if (_decoder) {
@@ -372,7 +392,13 @@ static NSMutableDictionary * gHistory;
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    // [self setupUserInteraction];
+    [self showHUD: _hiddenHUD];
+    UIView *frameView = [self frameView];
+    
+    if (frameView.contentMode == UIViewContentModeScaleAspectFit)
+        frameView.contentMode = UIViewContentModeScaleAspectFill;
+    else
+        frameView.contentMode = UIViewContentModeScaleAspectFit;
 }
 
 - (void)didReceiveMemoryWarning
@@ -410,6 +436,11 @@ static NSMutableDictionary * gHistory;
                                                object:[UIApplication sharedApplication]];
 }
 
+-(void) viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:YES];
+    [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
+}
+
 - (void) viewWillDisappear:(BOOL)animated
 {    
     [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -434,7 +465,7 @@ static NSMutableDictionary * gHistory;
     
     if (_hiddenHUD)
         [[UIApplication sharedApplication] setIdleTimerDisabled:NO];
-    
+
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
@@ -445,7 +476,7 @@ static NSMutableDictionary * gHistory;
 - (void) applicationWillResignActive: (NSNotification *)notification
 {
     [self showHUD:YES];
-    [self pause];
+    //[self pause];
     
     NSLog(@"applicationWillResignActive");    
 }
@@ -627,8 +658,8 @@ static NSMutableDictionary * gHistory;
             _bottomHUD.hidden       = NO;
             _progressLabel.hidden   = NO;
             _progressSlider.hidden  = NO;
-            _leftLabel.hidden       = NO;
-            _infoButton.hidden      = NO;
+            _leftLabel.hidden       = YES;
+            _infoButton.hidden      = YES;
             
             if (_activityIndicatorView.isAnimating) {
                 
@@ -1041,7 +1072,10 @@ static NSMutableDictionary * gHistory;
     _hiddenHUD = !show;    
     _panGestureRecognizer.enabled = _hiddenHUD;
     
-    [[UIApplication sharedApplication] setIdleTimerDisabled:_hiddenHUD];
+    //[[UIApplication sharedApplication] setIdleTimerDisabled:_hiddenHUD];
+
+    [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
+
     
     [UIView animateWithDuration:0.2
                           delay:0.0
