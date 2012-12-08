@@ -20,8 +20,9 @@
 
 @property (readonly) BOOL playing;
 @property (readwrite) BOOL isFullscreen;
-@property (readwrite) BOOL hasProcessbar;
+@property (readwrite) BOOL isLive;
 @property (nonatomic, retain) NSString *name;
+@property (nonatomic, retain) NSString *playPath;
 
 - (void) play;
 - (void) pause;

@@ -127,7 +127,7 @@ static NSMutableDictionary * gHistory;
 
 @implementation KxMovieViewController
 
-@synthesize hasProcessbar, isFullscreen, name;
+@synthesize isLive, isFullscreen, name, playPath;
 
 + (void)initialize
 {
@@ -146,11 +146,11 @@ static NSMutableDictionary * gHistory;
 {
 
     NSAssert(path.length > 0, @"empty path");
-    
+    playPath = path;
     self = [super initWithNibName:nil bundle:nil];
     if (self) {
-        hasProcessbar = YES;
-        isFullscreen = NO;
+        isLive = NO;
+        isFullscreen = YES;
         
         _moviePosition = 0;
         _startTime = -1;
@@ -164,7 +164,7 @@ static NSMutableDictionary * gHistory;
             KxMovieDecoder *decoder;
             decoder = [KxMovieDecoder movieDecoderWithContentPath:path error:&error];
             
-            NSLog(@"movie loaded");
+            NSLog(@"KxMovie load video %@", path);
             
             __strong KxMovieViewController *strongSelf = weakSelf;
             if (strongSelf) {
@@ -240,7 +240,7 @@ static NSMutableDictionary * gHistory;
     // top hud
     
     _doneButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    _doneButton.frame = CGRectMake(10,0,50,30);
+    _doneButton.frame = CGRectMake(10,0,40,30);
     _doneButton.backgroundColor = [UIColor clearColor];
     _doneButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
     _doneButton.autoresizingMask = UIViewAutoresizingFlexibleHeight;
@@ -248,8 +248,8 @@ static NSMutableDictionary * gHistory;
 
     //_doneButton.ti
     [_doneButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    [_doneButton setTitle:NSLocalizedString(@"返回", nil) forState:UIControlStateNormal];
-    _doneButton.titleLabel.font = [UIFont systemFontOfSize:13];
+    [_doneButton setTitle:NSLocalizedString(@"  返回", nil) forState:UIControlStateNormal];
+    _doneButton.titleLabel.font = [UIFont systemFontOfSize:14];
     _doneButton.showsTouchWhenHighlighted = YES;
     [_doneButton addTarget:self action:@selector(doneDidTouch:) forControlEvents:UIControlEventTouchUpInside];
     
@@ -281,7 +281,7 @@ static NSMutableDictionary * gHistory;
     titleLabel.text = [tmpString stringByAppendingString:self.name];
     titleLabel.font = [UIFont systemFontOfSize:13];
     titleLabel.autoresizingMask = UIViewAutoresizingFlexibleHeight;
-    [_topHUD addSubview:titleLabel];
+    //[_topHUD addSubview:titleLabel];
 
     _infoButton = [UIButton buttonWithType:UIButtonTypeInfoDark];
     _infoButton.frame = CGRectMake(width-25,5,20,20);
@@ -290,8 +290,8 @@ static NSMutableDictionary * gHistory;
     [_infoButton addTarget:self action:@selector(infoDidTouch:) forControlEvents:UIControlEventTouchUpInside];
     
     [_topHUD addSubview:_doneButton];
-    if(self.hasProcessbar){
-        NSLog(@"has process bar");
+    if(!isLive){
+        NSLog(@"has process bar when play live stream");
         [_bottomHUD addSubview:_progressLabel];
         [_bottomHUD addSubview:_progressSlider];
     }
@@ -335,7 +335,7 @@ static NSMutableDictionary * gHistory;
     [_bottomHUD addSubview:_rewindButton];
     [_bottomHUD addSubview:_playButton];
     [_bottomHUD addSubview:_forwardButton];
-    [_bottomHUD addSubview:_volumeSlider];
+    //[_bottomHUD addSubview:_volumeSlider];
     
     // gradients
     
@@ -372,8 +372,8 @@ static NSMutableDictionary * gHistory;
                           [NSNumber numberWithFloat:0.0f],
                           [NSNumber numberWithFloat:0.5],
                           nil];
-    if(hasProcessbar)
-    [_topHUD.layer insertSublayer:gradient atIndex:0];
+    if(!isLive)
+        [_topHUD.layer insertSublayer:gradient atIndex:0];
     
     if (_decoder) {
         
@@ -406,6 +406,11 @@ static NSMutableDictionary * gHistory;
     [super didReceiveMemoryWarning];    
 }
 
+-(void) viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:YES];
+    [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
+}
+
 - (void) viewDidAppear:(BOOL)animated
 {
     // NSLog(@"viewDidAppear");
@@ -434,12 +439,9 @@ static NSMutableDictionary * gHistory;
                                              selector:@selector(applicationWillResignActive:)
                                                  name:UIApplicationWillResignActiveNotification
                                                object:[UIApplication sharedApplication]];
+    //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationWillActive:) name:UIApplicationDidBecomeActiveNotification object:nil];
 }
 
--(void) viewWillAppear:(BOOL)animated{
-    [super viewWillAppear:YES];
-    [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
-}
 
 - (void) viewWillDisappear:(BOOL)animated
 {    
@@ -476,9 +478,18 @@ static NSMutableDictionary * gHistory;
 - (void) applicationWillResignActive: (NSNotification *)notification
 {
     [self showHUD:YES];
-    //[self pause];
-    
-    NSLog(@"applicationWillResignActive");    
+    [self pause];
+    if(isLive){
+        [self dismissModalViewControllerAnimated:YES];
+    }
+    NSLog(@"applicationWillResignActive");
+}
+
+- (void) applicationWillActive: (NSNotification *)notification
+{
+    [self showHUD:YES];
+    [self restorePlay];
+    NSLog(@"applicationWillActive");
 }
 
 #pragma mark - gesture recognizer
@@ -681,12 +692,19 @@ static NSMutableDictionary * gHistory;
 - (void) restorePlay
 {
     // NSLog(@"restorePlay");
-    
     NSNumber *n = [gHistory valueForKey:_decoder.path];
-    if (n)
-        [self updatePosition:n.floatValue playMode:YES];
-    else
-        [self play];    
+    if (n){
+        if(isLive){
+            [self updatePosition:-1 playMode:YES];
+        }
+        else
+        {
+            [self updatePosition:n.floatValue playMode:YES];
+        }
+    }
+    else{
+        [self play];
+    }
 }
 
 - (void) setupPresentView
@@ -779,7 +797,7 @@ static NSMutableDictionary * gHistory;
                             
                             if (delta < -2.0) {
                                 
-                                NSLog(@"desync audio (outrun) wait %.4f %.4f", _moviePosition, frame.position);
+                                //NSLog(@"desync audio (outrun) wait %.4f %.4f", _moviePosition, frame.position);
                                 memset(outData, 0, numFrames * numChannels * sizeof(float));
                                 break; // silence and exit
                             }
@@ -788,7 +806,7 @@ static NSMutableDictionary * gHistory;
                             
                             if (delta > 2.0 && count > 1) {
                                 
-                                NSLog(@"desync audio (lags) skip %.4f %.4f", _moviePosition, frame.position);
+                                //NSLog(@"desync audio (lags) skip %.4f %.4f", _moviePosition, frame.position);
                                 continue;
                             }
                             

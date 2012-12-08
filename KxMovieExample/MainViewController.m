@@ -34,7 +34,7 @@
             @"rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov",
             @"http://santai.tv/vod/test/test_format_1.3gp",
             @"http://santai.tv/vod/test/test_format_1.mp4",
-        
+            @"http://202.198.100.1:81//p=14.ts",
             //@"rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov",
             //@"http://santai.tv/vod/test/BigBuckBunny_175k.mov",
         ];
@@ -196,7 +196,7 @@
 
     KxMovieViewController *vc = [KxMovieViewController movieViewControllerWithContentPath:path];
     vc.isFullscreen = YES;
-    vc.hasProcessbar = YES;
+    vc.isLive = NO;
     [vc fullscreenMode:NO];
     vc.name = @"一部电影";
     [self presentViewController:vc animated:YES completion:nil];
