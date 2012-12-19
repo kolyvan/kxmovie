@@ -54,6 +54,8 @@
 		87FD6191163A75DC0090956E /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E79437163910D0000A0848 /* QuartzCore.framework */; };
 		87FD6192163A75DF0090956E /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E79439163910EA000A0848 /* Accelerate.framework */; };
 		87FD6193163A75E10090956E /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E79435163910CA000A0848 /* OpenGLES.framework */; };
+		87FE8D991681993D00407808 /* KxAudioSpectrumView.m in Sources */ = {isa = PBXBuildFile; fileRef = 87FE8D981681993D00407808 /* KxAudioSpectrumView.m */; };
+		87FE8DA61681B02C00407808 /* KxAudioSpectrumView.m in Sources */ = {isa = PBXBuildFile; fileRef = 87FE8D981681993D00407808 /* KxAudioSpectrumView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -108,6 +110,8 @@
 		87E7946116394577000A0848 /* KxAudioManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KxAudioManager.h; sourceTree = "<group>"; };
 		87FD6175163A75440090956E /* libkxmovie.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libkxmovie.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		87FD6179163A75440090956E /* kxmovie-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "kxmovie-Prefix.pch"; sourceTree = "<group>"; };
+		87FE8D971681993D00407808 /* KxAudioSpectrumView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KxAudioSpectrumView.h; sourceTree = "<group>"; };
+		87FE8D981681993D00407808 /* KxAudioSpectrumView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KxAudioSpectrumView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -239,6 +243,8 @@
 				87E794231639107F000A0848 /* KxMovieGLView.m */,
 				87E794241639107F000A0848 /* KxMovieViewController.h */,
 				87E794251639107F000A0848 /* KxMovieViewController.m */,
+				87FE8D971681993D00407808 /* KxAudioSpectrumView.h */,
+				87FE8D981681993D00407808 /* KxAudioSpectrumView.m */,
 				87FD6178163A75440090956E /* Supporting Files */,
 			);
 			path = kxmovie;
@@ -342,6 +348,7 @@
 				87E7942A1639107F000A0848 /* KxMovieViewController.m in Sources */,
 				87E7942F1639108E000A0848 /* AppDelegate.m in Sources */,
 				87E794301639108E000A0848 /* MainViewController.m in Sources */,
+				87FE8DA61681B02C00407808 /* KxAudioSpectrumView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -353,6 +360,7 @@
 				87FD6183163A75B10090956E /* KxMovieDecoder.m in Sources */,
 				87FD6184163A75B50090956E /* KxMovieGLView.m in Sources */,
 				87FD6185163A75B70090956E /* KxMovieViewController.m in Sources */,
+				87FE8D991681993D00407808 /* KxAudioSpectrumView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

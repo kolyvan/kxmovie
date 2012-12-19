@@ -15,7 +15,7 @@
 #import "KxMovieDecoder.h"
 #import "KxAudioManager.h"
 #import "KxMovieGLView.h"
-
+#import "KxAudioSpectrumView.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -119,6 +119,8 @@ static NSMutableDictionary * gHistory;
     CGFloat             _decodeDuration;
     CGFloat             _bufferedDuration;
     CGFloat             _minBufferedDuration;
+    
+    KxAudioSpectrumView *_spectrumView;
 }
 
 @property (readwrite) BOOL playing;
@@ -689,6 +691,10 @@ static NSMutableDictionary * gHistory;
         
         _imageView.image = [UIImage imageNamed:@"kxmovie.bundle/music_icon.png"];
         _imageView.contentMode = UIViewContentModeCenter;
+        
+        _spectrumView = [[KxAudioSpectrumView alloc] initWithFrame:CGRectMake(5, 70, bounds.size.width - 10, 100)];
+        _spectrumView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+        [self.view insertSubview:_spectrumView atIndex:1];
     }
     
     self.view.backgroundColor = [UIColor clearColor];
@@ -727,6 +733,9 @@ static NSMutableDictionary * gHistory;
 {
     //fillSignalF(outData,numFrames,numChannels);
     //return;
+    
+    float *kData = outData;
+    UInt32 kFrames = numFrames;
         
     @autoreleasepool {
         
@@ -798,6 +807,14 @@ static NSMutableDictionary * gHistory;
                 break;
             }
         }
+    }
+    
+    
+    if (_spectrumView) {
+        
+        [_spectrumView renderSamples:kData
+                           numFrames:kFrames
+                         numChannels:numChannels];
     }
 }
 
