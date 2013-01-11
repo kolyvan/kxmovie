@@ -127,7 +127,7 @@ static NSMutableDictionary * gHistory;
 
 @implementation KxMovieViewController
 
-@synthesize isLive, isFullscreen, name, playPath;
+@synthesize isLive, isAlive, isFullscreen, name, playPath;
 
 + (void)initialize
 {
@@ -151,7 +151,7 @@ static NSMutableDictionary * gHistory;
     if (self) {
         isLive = NO;
         isFullscreen = YES;
-        
+        self.isAlive = YES;
         _moviePosition = 0;
         _startTime = -1;
         self.wantsFullScreenLayout = YES;
@@ -184,7 +184,7 @@ static NSMutableDictionary * gHistory;
     // NSLog(@"%@ dealloc", self);
     
     [self pause];
-    
+    self.isAlive = NO;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     
     if (_dispatchQueue) {
@@ -228,32 +228,44 @@ static NSMutableDictionary * gHistory;
     _topHUD.opaque = NO;
     _bottomHUD.opaque = NO;
     
-    _topHUD.frame = CGRectMake(0,0,width,35);
+    _topHUD.frame = CGRectMake(0, 0, width, 40);
+    
     _bottomHUD.frame = CGRectMake(30,height-70,width-(30*2),55);
     
     _topHUD.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    
     _bottomHUD.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleLeftMargin;
     [self.view addSubview:_topHUD];
+    if(!isLive)
     [self.view addSubview:_bottomHUD];
     
     _topHUD.backgroundColor = [UIColor darkGrayColor];
     // top hud
-    
-    _doneButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    _doneButton.frame = CGRectMake(10,0,40,30);
+    _doneButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+
+    BOOL isLandscape = UIInterfaceOrientationIsLandscape([[UIDevice currentDevice] orientation]);
+    //NSLog(@"bounds is : %f %f", bounds.size.width, bounds.size.height);
+    if ( UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad || isLandscape)
+    {
+        _doneButton.frame = CGRectMake(bounds.size.height-60, 2, 50, 36);
+        //noOfRows = self.numberOfColumns;
+    }
+    else{
+        _doneButton.frame = CGRectMake(bounds.size.width-60, 2, 50, 36);
+    }
     _doneButton.backgroundColor = [UIColor clearColor];
-    _doneButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
+    _doneButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
     _doneButton.autoresizingMask = UIViewAutoresizingFlexibleHeight;
     _doneButton.contentVerticalAlignment = UIControlContentHorizontalAlignmentCenter;
 
     //_doneButton.ti
-    [_doneButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    [_doneButton setTitle:NSLocalizedString(@"  返回", nil) forState:UIControlStateNormal];
-    _doneButton.titleLabel.font = [UIFont systemFontOfSize:14];
+    [_doneButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [_doneButton setTitle:NSLocalizedString(@"返回", nil) forState:UIControlStateNormal];
+    _doneButton.titleLabel.font = [UIFont fontWithName:@"TrebuchetMS-Bold" size:14.5];
     _doneButton.showsTouchWhenHighlighted = YES;
     [_doneButton addTarget:self action:@selector(doneDidTouch:) forControlEvents:UIControlEventTouchUpInside];
     
-    _progressLabel = [[UILabel alloc] initWithFrame:CGRectMake(0,-30,105,30)];
+    _progressLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, -30,105,30)];
     _progressLabel.backgroundColor = [UIColor clearColor];
     _progressLabel.opaque = NO;
     _progressLabel.adjustsFontSizeToFitWidth = NO;
@@ -272,16 +284,19 @@ static NSMutableDictionary * gHistory;
     [_progressSlider setThumbImage:[UIImage imageNamed:@"kxmovie.bundle/sliderthumb"]
                           forState:UIControlStateNormal];
     
-    titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(100,0, 100,35)];
+    titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(10,0, 240, 40)];
     titleLabel.backgroundColor = [UIColor clearColor];
-    titleLabel.adjustsFontSizeToFitWidth = YES;
+    //titleLabel.adjustsFontSizeToFitWidth = YES;
+    titleLabel.font = [UIFont fontWithName:@"TrebuchetMS-Bold" size:14];
     titleLabel.textAlignment = UITextAlignmentLeft;
     titleLabel.textColor = [UIColor whiteColor];
     NSString *tmpString = @" 正在播放: ";
-    titleLabel.text = [tmpString stringByAppendingString:self.name];
-    titleLabel.font = [UIFont systemFontOfSize:13];
+    if (self.name) {
+        titleLabel.text = [tmpString stringByAppendingString:self.name];
+    }
+    //titleLabel.font = [UIFont systemFontOfSize:13];
     titleLabel.autoresizingMask = UIViewAutoresizingFlexibleHeight;
-    //[_topHUD addSubview:titleLabel];
+    [_topHUD addSubview:titleLabel];
 
     _infoButton = [UIButton buttonWithType:UIButtonTypeInfoDark];
     _infoButton.frame = CGRectMake(width-25,5,20,20);
@@ -479,7 +494,7 @@ static NSMutableDictionary * gHistory;
 {
     [self showHUD:YES];
     [self pause];
-    if(isLive){
+    if(self.isLive){
         [self dismissModalViewControllerAnimated:YES];
     }
     NSLog(@"applicationWillResignActive");
@@ -603,10 +618,14 @@ static NSMutableDictionary * gHistory;
 
 - (void) doneDidTouch: (id) sender
 {
-    if (self.presentingViewController || !self.navigationController)
+    if (self.presentingViewController || !self.navigationController){
         [self dismissViewControllerAnimated:YES completion:nil];
+    }
     else
+    {
         [self.navigationController popViewControllerAnimated:YES];
+    }
+    self.isAlive = NO;
 }
 
 - (void) infoDidTouch: (id) sender

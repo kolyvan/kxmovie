@@ -21,6 +21,7 @@
 @property (readonly) BOOL playing;
 @property (readwrite) BOOL isFullscreen;
 @property (readwrite) BOOL isLive;
+@property (readwrite) BOOL isAlive;
 @property (nonatomic, retain) NSString *name;
 @property (nonatomic, retain) NSString *playPath;
 

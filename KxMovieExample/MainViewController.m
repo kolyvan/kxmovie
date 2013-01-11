@@ -87,6 +87,7 @@
     NSString *folder = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
                                                             NSUserDomainMask,
                                                             YES) lastObject];
+    NSLog(@".......%@", folder);
     NSArray *contents = [fm contentsOfDirectoryAtPath:folder error:nil];
     
     for (NSString *filename in contents) {
@@ -116,6 +117,7 @@
                         [ext isEqualToString:@"mkv"] ||
                         [ext isEqualToString:@"mpeg"]||
                         [ext isEqualToString:@"mpg"] ||
+                        [ext isEqualToString:@"avs"] ||
                         [ext isEqualToString:@"flv"] ||
                         [ext isEqualToString:@"vob"]) {
                         
@@ -198,7 +200,7 @@
     vc.isFullscreen = YES;
     vc.isLive = YES;
     [vc fullscreenMode:NO];
-    vc.name = @"一部电影";
+    vc.name = @"xxxxxx一部电影";
     [self presentViewController:vc animated:YES completion:nil];
     //[self.navigationController pushViewController:vc animated:YES];    
 }
