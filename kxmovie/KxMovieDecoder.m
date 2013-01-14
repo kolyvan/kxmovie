@@ -1029,6 +1029,10 @@ static BOOL isNetworkPath (NSString *path)
                                                 &gotframe,
                                                 &packet);
                 
+                if(_videoFrame->interlaced_frame) {
+                    avpicture_deinterlace((AVPicture*)_videoFrame, (AVPicture*)_videoFrame, _videoCodecCtx->pix_fmt, _videoCodecCtx->width, _videoCodecCtx->height);
+                }
+
                 if (len < 0) {
                     NSLog(@"decode video error, skip packet");
                     break;
