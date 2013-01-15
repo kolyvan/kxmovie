@@ -927,7 +927,6 @@ static NSMutableDictionary * gHistory;
     NSTimeInterval destTime = _startTime + _moviePosition + interval;
     NSTimeInterval diffTime = destTime - [NSDate timeIntervalSinceReferenceDate];
     diffTime = MAX(diffTime, 0.02);
-    //NSLog(@"next tick %f", diffTime);
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, diffTime * NSEC_PER_SEC);
     dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
         [self tick];
@@ -1025,15 +1024,15 @@ static NSMutableDictionary * gHistory;
     _leftLabel.text = formatTimeInterval(duration - _moviePosition, YES);
             
 #ifdef DEBUG
-    _messageLabel.text = [NSString stringWithFormat:@"%d %d %d - %@ %@",
+    const NSTimeInterval durationSinceStart = [NSDate timeIntervalSinceReferenceDate] - _startTime;
+    _messageLabel.text = [NSString stringWithFormat:@"%d %d %d - %@%@ %@",
                           _videoFrames.count,
                           _audioFrames.count,
                           _scheduledDecode,
-                          formatTimeInterval([NSDate timeIntervalSinceReferenceDate] - _startTime, NO),
+                          formatTimeInterval(durationSinceStart, NO),
+                          durationSinceStart > _moviePosition + 0.5 ? @" (lags)" : @"",
                           _decoder.isEOF ? @"- END" : @""];
 #endif
-    
-    
 }
 
 - (void) showHUD: (BOOL) show
