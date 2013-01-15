@@ -962,9 +962,9 @@ static NSMutableDictionary * gHistory;
     }
     
     if (self.playing && _startTime < 0) {
-        _startTime = [NSDate timeIntervalSinceReferenceDate] - _moviePosition;
         if (_decoder.validAudio)
             [self enableAudio:YES];
+        _startTime = [NSDate timeIntervalSinceReferenceDate] - _moviePosition;
     }
     
     return interval;
