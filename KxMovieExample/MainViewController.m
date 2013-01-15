@@ -109,6 +109,7 @@
                         [ext isEqualToString:@"wma"] ||
                         [ext isEqualToString:@"m4a"] ||
                         [ext isEqualToString:@"m4v"] ||
+                        [ext isEqualToString:@"wmv"] ||
                         [ext isEqualToString:@"3gp"] ||
                         [ext isEqualToString:@"mp4"] ||
                         [ext isEqualToString:@"mov"] ||
