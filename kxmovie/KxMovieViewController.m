@@ -16,6 +16,7 @@
 #import "KxAudioManager.h"
 #import "KxMovieGLView.h"
 
+const int kFirstFrameTsNotSet = -1;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -82,10 +83,11 @@ static NSMutableDictionary * gHistory;
     NSData              *_currentAudioFrame;
     NSUInteger          _currentAudioFramePos;
     CGFloat             _moviePosition;
+    CGFloat             _firstFrameTs;
     BOOL                _disableUpdateHUD;
     NSInteger           _scheduledDecode;
     NSLock              *_scheduledLock;
-    NSTimeInterval      _startTime;    
+    NSTimeInterval      _startTime;
     BOOL                _fullscreen;
     BOOL                _hiddenHUD;
     BOOL                _fitMode;
@@ -122,6 +124,7 @@ static NSMutableDictionary * gHistory;
 }
 
 @property (readwrite) BOOL playing;
+@property (readonly) CGFloat actualMoviePosition;
 @end
 
 @implementation KxMovieViewController
@@ -148,6 +151,7 @@ static NSMutableDictionary * gHistory;
         
         _moviePosition = 0;
         _startTime = -1;
+        _firstFrameTs = kFirstFrameTsNotSet;
         self.wantsFullScreenLayout = YES;
         
         __weak KxMovieViewController *weakSelf = self;
@@ -848,7 +852,10 @@ static NSMutableDictionary * gHistory;
             for (KxMovieFrame *frame in frames)
                 if (frame.type == KxMovieFrameTypeVideo) {
                     [_videoFrames addObject:frame];
-                    _bufferedDuration += frame.duration;                    
+                    _bufferedDuration += frame.duration;
+                    if (_firstFrameTs == kFirstFrameTsNotSet) {
+                        _firstFrameTs = (int)frame.position;
+                    }
                 }
         }
     }
@@ -1019,9 +1026,9 @@ static NSMutableDictionary * gHistory;
     
     CGFloat duration = _decoder.duration;
     if (_progressSlider.state == UIControlStateNormal)
-        _progressSlider.value = _moviePosition / duration;
-    _progressLabel.text = formatTimeInterval(_moviePosition, NO);
-    _leftLabel.text = formatTimeInterval(duration - _moviePosition, YES);
+        _progressSlider.value = self.actualMoviePosition / duration;
+    _progressLabel.text = formatTimeInterval(self.actualMoviePosition, NO);
+    _leftLabel.text = formatTimeInterval(duration - self.actualMoviePosition, YES);
             
 #ifdef DEBUG
     const NSTimeInterval durationSinceStart = [NSDate timeIntervalSinceReferenceDate] - _startTime;
@@ -1082,6 +1089,7 @@ static NSMutableDictionary * gHistory;
     _bufferedDuration = 0;
     
     position = MIN(_decoder.duration - 1, MAX(0, position));
+    position += _firstFrameTs;
     
     @synchronized (_decoder) {
         _decoder.position = position;
@@ -1319,6 +1327,10 @@ static NSMutableDictionary * gHistory;
             }
         }
     }
+}
+
+-(CGFloat)actualMoviePosition {
+    return _moviePosition - _firstFrameTs;
 }
 
 @end
