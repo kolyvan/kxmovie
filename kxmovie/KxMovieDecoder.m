@@ -355,6 +355,7 @@ static BOOL isNetworkPath (NSString *path)
 @dynamic validVideo;
 @dynamic info;
 @dynamic videoStreamFormatName;
+@dynamic startTime;
 
 - (CGFloat) duration
 {
@@ -508,6 +509,27 @@ static BOOL isNetworkPath (NSString *path)
     return name ? [NSString stringWithCString:name encoding:NSUTF8StringEncoding] : @"?";
 }
 
+- (CGFloat) startTime
+{
+    if (_videoStream != -1) {
+        
+        AVStream *st = _formatCtx->streams[_videoStream];
+        if (AV_NOPTS_VALUE != st->start_time)
+            return st->start_time * _videoTimeBase;
+        return 0;
+    }
+    
+    if (_audioStream != -1) {
+        
+        AVStream *st = _formatCtx->streams[_audioStream];
+        if (AV_NOPTS_VALUE != st->start_time)
+            return st->start_time * _audioTimeBase;
+        return 0;
+    }
+        
+    return 0;
+}
+
 + (void)initialize
 {
     av_register_all();   
@@ -646,6 +668,8 @@ static BOOL isNetworkPath (NSString *path)
           self.frameHeight,
           _fps,
           _videoTimeBase);
+    
+    NSLog(@"video start time %f", st->start_time * _videoTimeBase);
     
     return kxMovieErrorNone;
 }

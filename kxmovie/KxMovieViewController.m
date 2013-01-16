@@ -1018,10 +1018,12 @@ static NSMutableDictionary * gHistory;
         return;
     
     CGFloat duration = _decoder.duration;
+    CGFloat position = _moviePosition -_decoder.startTime;
+    
     if (_progressSlider.state == UIControlStateNormal)
-        _progressSlider.value = _moviePosition / duration;
-    _progressLabel.text = formatTimeInterval(_moviePosition, NO);
-    _leftLabel.text = formatTimeInterval(duration - _moviePosition, YES);
+        _progressSlider.value = position / duration;
+    _progressLabel.text = formatTimeInterval(position, NO);
+    _leftLabel.text = formatTimeInterval(duration - position, YES);
             
 #ifdef DEBUG
     const NSTimeInterval durationSinceStart = [NSDate timeIntervalSinceReferenceDate] - _startTime;
