@@ -242,16 +242,16 @@ static NSMutableDictionary * gHistory;
     _doneButton.showsTouchWhenHighlighted = YES;
     [_doneButton addTarget:self action:@selector(doneDidTouch:) forControlEvents:UIControlEventTouchUpInside];
     
-    _progressLabel = [[UILabel alloc] initWithFrame:CGRectMake(48,5,45,20)];
+    _progressLabel = [[UILabel alloc] initWithFrame:CGRectMake(48,5,50,20)];
     _progressLabel.backgroundColor = [UIColor clearColor];
     _progressLabel.opaque = NO;
     _progressLabel.adjustsFontSizeToFitWidth = NO;
     _progressLabel.textAlignment = UITextAlignmentRight;
     _progressLabel.textColor = [UIColor whiteColor];
-    _progressLabel.text = @"0:00:00";
+    _progressLabel.text = @"00:00:00";
     _progressLabel.font = [UIFont systemFontOfSize:12];
     
-    _progressSlider = [[UISlider alloc] initWithFrame:CGRectMake(95,4,width-175,20)];
+    _progressSlider = [[UISlider alloc] initWithFrame:CGRectMake(100,4,width-182,20)];
     _progressSlider.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     _progressSlider.continuous = NO;
     _progressSlider.value = 0;
@@ -261,7 +261,7 @@ static NSMutableDictionary * gHistory;
     [_progressSlider setThumbImage:[UIImage imageNamed:@"kxmovie.bundle/sliderthumb"]
                           forState:UIControlStateNormal];
     
-    _leftLabel = [[UILabel alloc] initWithFrame:CGRectMake(width-78,5,50,20)];
+    _leftLabel = [[UILabel alloc] initWithFrame:CGRectMake(width-80,5,60,20)];
     _leftLabel.backgroundColor = [UIColor clearColor];
     _leftLabel.opaque = NO;
     _leftLabel.adjustsFontSizeToFitWidth = NO;
@@ -1019,6 +1019,9 @@ static NSMutableDictionary * gHistory;
     
     CGFloat duration = _decoder.duration;
     CGFloat position = _moviePosition -_decoder.startTime;
+    
+    if (duration > 356400)
+        duration = 356400;
     
     if (_progressSlider.state == UIControlStateNormal)
         _progressSlider.value = position / duration;

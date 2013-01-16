@@ -359,7 +359,11 @@ static BOOL isNetworkPath (NSString *path)
 
 - (CGFloat) duration
 {
-	return _formatCtx ? (CGFloat)_formatCtx->duration / AV_TIME_BASE : 0;
+    if (!_formatCtx)
+        return 0;
+    if (_formatCtx->duration == AV_NOPTS_VALUE)
+        return MAXFLOAT;
+    return (CGFloat)_formatCtx->duration / AV_TIME_BASE;
 }
 
 - (CGFloat) position
