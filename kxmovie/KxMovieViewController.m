@@ -600,8 +600,8 @@ static NSMutableDictionary * gHistory;
                withError: (NSError *) error
 {
     NSLog(@"setMovieDecoder");
-    
-    if (decoder) {
+        
+    if (!error && decoder) {
         
         _decoder        = decoder;
         _dispatchQueue  = dispatch_queue_create("KxMovie", DISPATCH_QUEUE_SERIAL);
@@ -640,6 +640,7 @@ static NSMutableDictionary * gHistory;
         
          if (self.isViewLoaded && self.view.window) {
         
+             [_activityIndicatorView stopAnimating];
              [self handleDecoderMovieError: error];
          }
     }
@@ -657,14 +658,13 @@ static NSMutableDictionary * gHistory;
 }
 
 - (void) setupPresentView
-{
-    // NSLog(@"setupPresentView");
-    
+{    
     CGRect bounds = self.view.bounds;
     
     if (_decoder.validVideo) {
         _glView = [[KxMovieGLView alloc] initWithFrame:bounds decoder:_decoder];
-    }
+        
+    } 
     
     if (!_glView) {
         
@@ -684,7 +684,7 @@ static NSMutableDictionary * gHistory;
         [self setupUserInteraction];
     
     } else {
-        
+       
         _imageView.image = [UIImage imageNamed:@"kxmovie.bundle/music_icon.png"];
         _imageView.contentMode = UIViewContentModeCenter;
     }
@@ -1205,7 +1205,7 @@ static NSMutableDictionary * gHistory;
 - (void) handleDecoderMovieError: (NSError *) error
 {
     UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Failure", nil)
-                                                        message:[error description]
+                                                        message:[error localizedDescription]
                                                        delegate:nil
                                               cancelButtonTitle:NSLocalizedString(@"Ok", nil)
                                               otherButtonTitles:nil];
