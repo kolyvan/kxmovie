@@ -485,11 +485,6 @@ static NSMutableDictionary * gHistory;
 
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-    return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
-}
-
 - (void) applicationWillResignActive: (NSNotification *)notification
 {
     [self showHUD:YES];
@@ -625,6 +620,8 @@ static NSMutableDictionary * gHistory;
     {
         [self.navigationController popViewControllerAnimated:YES];
     }
+     
+
     self.isAlive = NO;
 }
 
@@ -1391,6 +1388,19 @@ static NSMutableDictionary * gHistory;
             }
         }
     }
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    if ( UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad )
+    {
+        return (interfaceOrientation == UIInterfaceOrientationLandscapeLeft || interfaceOrientation == UIInterfaceOrientationLandscapeRight);
+    }
+    return NO;
+}
+
+-(BOOL)shouldAutorotate{
+    return NO;
 }
 
 @end
