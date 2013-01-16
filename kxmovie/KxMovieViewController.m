@@ -119,6 +119,8 @@ static NSMutableDictionary * gHistory;
     CGFloat             _decodeDuration;
     CGFloat             _bufferedDuration;
     CGFloat             _minBufferedDuration;
+    
+    BOOL                _savedIdleTimer;
 }
 
 @property (readwrite) BOOL playing;
@@ -389,6 +391,8 @@ static NSMutableDictionary * gHistory;
     if (_infoMode)
         [self showInfoView:NO animated:NO];
     
+    _savedIdleTimer = [[UIApplication sharedApplication] isIdleTimerDisabled];
+    
     [self showHUD: YES];
     
     if (_decoder) {
@@ -428,10 +432,8 @@ static NSMutableDictionary * gHistory;
     
     if (_fullscreen)
         [self fullscreenMode:NO];
-    
-    if (_hiddenHUD)
-        [[UIApplication sharedApplication] setIdleTimerDisabled:NO];
-    
+        
+    [[UIApplication sharedApplication] setIdleTimerDisabled:_savedIdleTimer];
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
@@ -658,7 +660,7 @@ static NSMutableDictionary * gHistory;
 }
 
 - (void) setupPresentView
-{    
+{
     CGRect bounds = self.view.bounds;
     
     if (_decoder.validVideo) {
@@ -1065,7 +1067,7 @@ static NSMutableDictionary * gHistory;
 {
     _hiddenHUD = !show;    
     _panGestureRecognizer.enabled = _hiddenHUD;
-    
+        
     [[UIApplication sharedApplication] setIdleTimerDisabled:_hiddenHUD];
     
     [UIView animateWithDuration:0.2
