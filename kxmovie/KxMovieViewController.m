@@ -255,9 +255,6 @@ static NSMutableDictionary * gHistory;
     _progressSlider.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     _progressSlider.continuous = NO;
     _progressSlider.value = 0;
-    [_progressSlider addTarget:self
-                        action:@selector(progressDidChange:)
-              forControlEvents:UIControlEventValueChanged];
     [_progressSlider setThumbImage:[UIImage imageNamed:@"kxmovie.bundle/sliderthumb"]
                           forState:UIControlStateNormal];
     
@@ -591,7 +588,8 @@ static NSMutableDictionary * gHistory;
 }
 
 - (void) progressDidChange: (id) sender
-{    
+{
+    NSAssert(_decoder.duration != MAXFLOAT, @"bugcheck");
     UISlider *slider = sender;
     [self setMoviePosition:slider.value * _decoder.duration];
 }
@@ -692,6 +690,29 @@ static NSMutableDictionary * gHistory;
     }
     
     self.view.backgroundColor = [UIColor clearColor];
+    
+    if (_decoder.duration == MAXFLOAT) {
+        
+        _leftLabel.text = @"\u221E"; // infinity
+        _leftLabel.font = [UIFont systemFontOfSize:14];
+        
+        CGRect frame;
+        
+        frame = _leftLabel.frame;
+        frame.origin.x += 40;
+        frame.size.width -= 40;
+        _leftLabel.frame = frame;
+        
+        frame =_progressSlider.frame;
+        frame.size.width += 40;
+        _progressSlider.frame = frame;
+        
+    } else {
+        
+        [_progressSlider addTarget:self
+                            action:@selector(progressDidChange:)
+                  forControlEvents:UIControlEventValueChanged];
+    }
 }
 
 - (void) setupUserInteraction
@@ -1017,16 +1038,16 @@ static NSMutableDictionary * gHistory;
     if (_disableUpdateHUD)
         return;
     
-    CGFloat duration = _decoder.duration;
-    CGFloat position = _moviePosition -_decoder.startTime;
-    
-    if (duration > 356400)
-        duration = 356400;
+    const CGFloat duration = _decoder.duration;
+    const CGFloat position = _moviePosition -_decoder.startTime;
     
     if (_progressSlider.state == UIControlStateNormal)
         _progressSlider.value = position / duration;
     _progressLabel.text = formatTimeInterval(position, NO);
-    _leftLabel.text = formatTimeInterval(duration - position, YES);
+    
+    if (_decoder.duration != MAXFLOAT)
+        _leftLabel.text = formatTimeInterval(duration - position, YES);
+    
             
 #ifdef DEBUG
     const NSTimeInterval durationSinceStart = [NSDate timeIntervalSinceReferenceDate] - _startTime;
