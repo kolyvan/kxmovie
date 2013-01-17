@@ -191,6 +191,7 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
     NSString *path;
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     
     if (indexPath.section == 0) {
         
@@ -200,8 +201,17 @@
         
         path = _localMovies[indexPath.row];
     }
-
-    KxMovieViewController *vc = [KxMovieViewController movieViewControllerWithContentPath:path];
+    
+    // increase buffering for .wmv, it solves problem with delaying audio frames
+    if ([path.pathExtension isEqualToString:@"wmv"])
+        parameters[KxMovieParameterMinBufferedDuration] = @(5.0);
+    
+    // disable deinterlacing for iPhone, because it's complex operation can cause stuttering
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone)
+        parameters[KxMovieParameterDisableDeinterlacing] = @(YES);
+    
+    KxMovieViewController *vc = [KxMovieViewController movieViewControllerWithContentPath:path
+                                                                               parameters:parameters];
     vc.isFullscreen = YES;
     vc.isLive = YES;
     [vc fullscreenMode:NO];

@@ -13,10 +13,14 @@
 
 @class KxMovieDecoder;
 
+extern NSString * const KxMovieParameterDecodeDuration;         // Float
+extern NSString * const KxMovieParameterMinBufferedDuration;    // Float
+extern NSString * const KxMovieParameterDisableDeinterlacing;   // BOOL
 
 @interface KxMovieViewController : UIViewController<UITableViewDataSource, UITableViewDelegate>
 
-+ (id) movieViewControllerWithContentPath: (NSString *) path;
++ (id) movieViewControllerWithContentPath: (NSString *) path
+                               parameters: (NSDictionary *) parameters;
 
 @property (readonly) BOOL playing;
 @property (readwrite) BOOL isFullscreen;
