@@ -77,7 +77,7 @@ FFMPEG_BUILD_ARGS = [
 
 FFMPEG_LIBS = [
 'libavcodec',
-'libavdevice',
+#'libavdevice',
 'libavformat',
 'libavutil',
 'libswscale',

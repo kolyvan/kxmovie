@@ -28,7 +28,6 @@
 		87E794421639110F000A0848 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E79437163910D0000A0848 /* QuartzCore.framework */; };
 		87E794431639110F000A0848 /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E79435163910CA000A0848 /* OpenGLES.framework */; };
 		87E7944A16391B9E000A0848 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7944416391B9E000A0848 /* libavcodec.a */; };
-		87E7944B16391B9E000A0848 /* libavdevice.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7944516391B9E000A0848 /* libavdevice.a */; };
 		87E7944C16391B9E000A0848 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7944616391B9E000A0848 /* libavformat.a */; };
 		87E7944D16391B9E000A0848 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7944716391B9E000A0848 /* libavutil.a */; };
 		87E7944E16391B9E000A0848 /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7944816391B9E000A0848 /* libswresample.a */; };
@@ -41,7 +40,6 @@
 		87FD6184163A75B50090956E /* KxMovieGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 87E794231639107F000A0848 /* KxMovieGLView.m */; };
 		87FD6185163A75B70090956E /* KxMovieViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 87E794251639107F000A0848 /* KxMovieViewController.m */; };
 		87FD6186163A75BF0090956E /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7944416391B9E000A0848 /* libavcodec.a */; };
-		87FD6187163A75C10090956E /* libavdevice.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7944516391B9E000A0848 /* libavdevice.a */; };
 		87FD6188163A75C30090956E /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7944616391B9E000A0848 /* libavformat.a */; };
 		87FD6189163A75C60090956E /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7944716391B9E000A0848 /* libavutil.a */; };
 		87FD618A163A75C80090956E /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E7944816391B9E000A0848 /* libswresample.a */; };
@@ -98,7 +96,6 @@
 		87E7943B163910F6000A0848 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/System/Library/Frameworks/AudioToolbox.framework; sourceTree = DEVELOPER_DIR; };
 		87E7943D163910FB000A0848 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/System/Library/Frameworks/CoreAudio.framework; sourceTree = DEVELOPER_DIR; };
 		87E7944416391B9E000A0848 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = libs/libavcodec.a; sourceTree = "<group>"; };
-		87E7944516391B9E000A0848 /* libavdevice.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavdevice.a; path = libs/libavdevice.a; sourceTree = "<group>"; };
 		87E7944616391B9E000A0848 /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = libs/libavformat.a; sourceTree = "<group>"; };
 		87E7944716391B9E000A0848 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavutil.a; path = libs/libavutil.a; sourceTree = "<group>"; };
 		87E7944816391B9E000A0848 /* libswresample.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswresample.a; path = libs/libswresample.a; sourceTree = "<group>"; };
@@ -117,7 +114,6 @@
 			files = (
 				87E7945116391BC1000A0848 /* libz.dylib in Frameworks */,
 				87E7944A16391B9E000A0848 /* libavcodec.a in Frameworks */,
-				87E7944B16391B9E000A0848 /* libavdevice.a in Frameworks */,
 				87E7944C16391B9E000A0848 /* libavformat.a in Frameworks */,
 				87E7944D16391B9E000A0848 /* libavutil.a in Frameworks */,
 				87E7944E16391B9E000A0848 /* libswresample.a in Frameworks */,
@@ -141,7 +137,6 @@
 				87FD6176163A75440090956E /* Foundation.framework in Frameworks */,
 				87FD618D163A75CF0090956E /* CoreGraphics.framework in Frameworks */,
 				87FD6186163A75BF0090956E /* libavcodec.a in Frameworks */,
-				87FD6187163A75C10090956E /* libavdevice.a in Frameworks */,
 				87FD6188163A75C30090956E /* libavformat.a in Frameworks */,
 				87FD6189163A75C60090956E /* libavutil.a in Frameworks */,
 				87FD618A163A75C80090956E /* libswresample.a in Frameworks */,
@@ -182,7 +177,6 @@
 			isa = PBXGroup;
 			children = (
 				87E7944416391B9E000A0848 /* libavcodec.a */,
-				87E7944516391B9E000A0848 /* libavdevice.a */,
 				87E7944616391B9E000A0848 /* libavformat.a */,
 				87E7944716391B9E000A0848 /* libavutil.a */,
 				87E7944816391B9E000A0848 /* libswresample.a */,
