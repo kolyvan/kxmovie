@@ -13,16 +13,22 @@ For this open console and type in
 ### Usage
 
 1. Drop files from kxmovie/output folder in your project.
-2. Add frameworks: MediaPlayer, CoreAudio, AudioToolbox, Accelerate, QuartzCore, OpenGLES and libz.dylib
+2. Add frameworks: MediaPlayer, CoreAudio, AudioToolbox, Accelerate, QuartzCore, OpenGLES and libz.dylib .
+3. Add libs: libkxmovie.a, libavcodec.a, libavformat.a, libavutil.a, libswscale.a, libswresample.a
 
 For play movies:
 
 	ViewController *vc;
-	vc = [KxMovieViewController movieViewControllerWithContentPath:path error:nil];
+	vc = [KxMovieViewController movieViewControllerWithContentPath:path parameters:nil];
 	[self presentViewController:vc animated:YES completion:nil];
 
-Also, see KxMovieExample demo project as example of using.
+See KxMovieExample demo project as example of using.
+
+Also, you can include kxmovie as subproject.
+Look at [kxtorrent](https://github.com/kolyvan/kxtorrent) as example.
+
 Remember, you need to copy some movies via iTunes for playing them.
+And you can use kxmovie for streaming from remote sources via rtsp,rtmp,http,etc.
 
 ### Requirements
 
