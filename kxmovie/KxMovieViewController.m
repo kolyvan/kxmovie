@@ -235,9 +235,11 @@ static NSMutableDictionary * gHistory;
     _topHUD.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     
     _bottomHUD.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleLeftMargin;
-    [self.view addSubview:_topHUD];
+    //[self.view addSubview:_topHUD];
     if(!isLive)
-    [self.view addSubview:_bottomHUD];
+    {
+        [self.view addSubview:_bottomHUD];
+    }
     
     _topHUD.backgroundColor = [UIColor darkGrayColor];
     // top hud
@@ -461,7 +463,6 @@ static NSMutableDictionary * gHistory;
 - (void) viewWillDisappear:(BOOL)animated
 {    
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-    [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:UIStatusBarAnimationNone];
     [super viewWillDisappear:animated];
     
     [_activityIndicatorView stopAnimating];
@@ -479,10 +480,10 @@ static NSMutableDictionary * gHistory;
     
     if (_fullscreen)
         [self fullscreenMode:NO];
-    
+    /*
     if (_hiddenHUD)
         [[UIApplication sharedApplication] setIdleTimerDisabled:NO];
-
+     */
 }
 
 - (void) applicationWillResignActive: (NSNotification *)notification
@@ -490,7 +491,7 @@ static NSMutableDictionary * gHistory;
     [self showHUD:YES];
     [self pause];
     if(self.isLive){
-        [self dismissModalViewControllerAnimated:YES];
+        //[self dismissModalViewControllerAnimated:YES];
     }
     NSLog(@"applicationWillResignActive");
 }
@@ -613,15 +614,16 @@ static NSMutableDictionary * gHistory;
 
 - (void) doneDidTouch: (id) sender
 {
+    
     if (self.presentingViewController || !self.navigationController){
+        NSLog(@"[self dismissViewControllerAnimated:YES completion:nil];  %@", self);
         [self dismissViewControllerAnimated:YES completion:nil];
     }
     else
     {
         [self.navigationController popViewControllerAnimated:YES];
     }
-     
-
+    
     self.isAlive = NO;
 }
 
