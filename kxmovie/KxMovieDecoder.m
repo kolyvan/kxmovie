@@ -568,7 +568,7 @@ static BOOL isNetworkPath (NSString *path)
     if (!_videoCodecCtx)
         return nil;
     
-    if (_videoCodecCtx->pix_fmt == AV_PIX_FMT_NONE)
+    if (_videoCodecCtx->pix_fmt == PIX_FMT_NONE)
         return @"";
     
     const char *name = av_get_pix_fmt_name(_videoCodecCtx->pix_fmt);
@@ -1095,7 +1095,7 @@ static BOOL isNetworkPath (NSString *path)
 {  
     if (format == KxVideoFrameFormatYUV &&
         _videoCodecCtx &&
-        _videoCodecCtx->pix_fmt == AV_PIX_FMT_YUV420P) {
+        _videoCodecCtx->pix_fmt == PIX_FMT_YUV420P) {
         
         _videoFrameFormat = KxVideoFrameFormatYUV;
         return YES;
