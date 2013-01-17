@@ -120,9 +120,12 @@ static NSMutableDictionary * gHistory;
     CGFloat             _decodeDuration;
     CGFloat             _bufferedDuration;
     CGFloat             _minBufferedDuration;
+    
+    BOOL                _savedIdleTimer;
 }
 
 @property (readwrite) BOOL playing;
+@property (readwrite, strong) KxArtworkFrame *artworkFrame;
 @end
 
 @implementation KxMovieViewController
@@ -267,25 +270,24 @@ static NSMutableDictionary * gHistory;
     _doneButton.showsTouchWhenHighlighted = YES;
     [_doneButton addTarget:self action:@selector(doneDidTouch:) forControlEvents:UIControlEventTouchUpInside];
     
-    _progressLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, -30,105,30)];
+    _progressLabel = [[UILabel alloc] initWithFrame:CGRectMake(48,5,50,20)];
     _progressLabel.backgroundColor = [UIColor clearColor];
     _progressLabel.opaque = NO;
     _progressLabel.adjustsFontSizeToFitWidth = NO;
     _progressLabel.textAlignment = UITextAlignmentLeft;
     _progressLabel.textColor = [UIColor whiteColor];
-    _progressLabel.text = @"";
-    _progressLabel.font = [UIFont systemFontOfSize:13];
+
+    _progressLabel.text = @"00:00:00";
+    _progressLabel.font = [UIFont systemFontOfSize:12];
     
-    _progressSlider = [[UISlider alloc] initWithFrame:CGRectMake(65,-26,width-175,20)];
+    _progressSlider = [[UISlider alloc] initWithFrame:CGRectMake(100,4,width-182,20)];
     _progressSlider.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     _progressSlider.continuous = NO;
     _progressSlider.value = 0;
-    [_progressSlider addTarget:self
-                        action:@selector(progressDidChange:)
-              forControlEvents:UIControlEventValueChanged];
     [_progressSlider setThumbImage:[UIImage imageNamed:@"kxmovie.bundle/sliderthumb"]
                           forState:UIControlStateNormal];
     
+/*
     titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(10,0, 240, 40)];
     titleLabel.backgroundColor = [UIColor clearColor];
     //titleLabel.adjustsFontSizeToFitWidth = YES;
@@ -300,6 +302,17 @@ static NSMutableDictionary * gHistory;
     titleLabel.autoresizingMask = UIViewAutoresizingFlexibleHeight;
     [_topHUD addSubview:titleLabel];
 
+*/
+    _leftLabel = [[UILabel alloc] initWithFrame:CGRectMake(width-80,5,60,20)];
+    _leftLabel.backgroundColor = [UIColor clearColor];
+    _leftLabel.opaque = NO;
+    _leftLabel.adjustsFontSizeToFitWidth = NO;
+    _leftLabel.textAlignment = UITextAlignmentLeft;
+    _leftLabel.textColor = [UIColor whiteColor];
+    _leftLabel.text = @"-99:59:59";
+    _leftLabel.font = [UIFont systemFontOfSize:12];
+    _leftLabel.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
+    
     _infoButton = [UIButton buttonWithType:UIButtonTypeInfoDark];
     _infoButton.frame = CGRectMake(width-25,5,20,20);
     _infoButton.showsTouchWhenHighlighted = YES;
@@ -440,6 +453,8 @@ static NSMutableDictionary * gHistory;
     if (_infoMode)
         [self showInfoView:NO animated:NO];
     
+    _savedIdleTimer = [[UIApplication sharedApplication] isIdleTimerDisabled];
+    
     [self showHUD: YES];
     
     if (_decoder) {
@@ -477,13 +492,12 @@ static NSMutableDictionary * gHistory;
             [gHistory setValue:[NSNumber numberWithFloat:_moviePosition]
                         forKey:_decoder.path];
     }
-    
-    if (_fullscreen)
+
+    [[UIApplication sharedApplication] setIdleTimerDisabled:_savedIdleTimer];
+    if (_fullscreen){
         [self fullscreenMode:NO];
-    /*
-    if (_hiddenHUD)
-        [[UIApplication sharedApplication] setIdleTimerDisabled:NO];
-     */
+        [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
+    }
 }
 
 - (void) applicationWillResignActive: (NSNotification *)notification
@@ -651,7 +665,8 @@ static NSMutableDictionary * gHistory;
 }
 
 - (void) progressDidChange: (id) sender
-{    
+{
+    NSAssert(_decoder.duration != MAXFLOAT, @"bugcheck");
     UISlider *slider = sender;
     [self setMoviePosition:slider.value * _decoder.duration];
 }
@@ -662,8 +677,8 @@ static NSMutableDictionary * gHistory;
                withError: (NSError *) error
 {
     NSLog(@"setMovieDecoder");
-    
-    if (decoder) {
+        
+    if (!error && decoder) {
         
         _decoder        = decoder;
         _dispatchQueue  = dispatch_queue_create("KxMovie", DISPATCH_QUEUE_SERIAL);
@@ -702,6 +717,7 @@ static NSMutableDictionary * gHistory;
         
          if (self.isViewLoaded && self.view.window) {
         
+             [_activityIndicatorView stopAnimating];
              [self handleDecoderMovieError: error];
          }
     }
@@ -709,31 +725,20 @@ static NSMutableDictionary * gHistory;
 
 - (void) restorePlay
 {
-    // NSLog(@"restorePlay");
     NSNumber *n = [gHistory valueForKey:_decoder.path];
-    if (n){
-        if(isLive){
-            [self updatePosition:-1 playMode:YES];
-        }
-        else
-        {
-            [self updatePosition:n.floatValue playMode:YES];
-        }
-    }
-    else{
+    if (n)
+        [self updatePosition:n.floatValue playMode:YES];
+    else
         [self play];
-    }
 }
 
 - (void) setupPresentView
 {
-    // NSLog(@"setupPresentView");
-    
     CGRect bounds = self.view.bounds;
     
     if (_decoder.validVideo) {
         _glView = [[KxMovieGLView alloc] initWithFrame:bounds decoder:_decoder];
-    }
+    } 
     
     if (!_glView) {
         
@@ -753,12 +758,35 @@ static NSMutableDictionary * gHistory;
         [self setupUserInteraction];
     
     } else {
-        
+       
         _imageView.image = [UIImage imageNamed:@"kxmovie.bundle/music_icon.png"];
         _imageView.contentMode = UIViewContentModeCenter;
     }
     
     self.view.backgroundColor = [UIColor clearColor];
+    
+    if (_decoder.duration == MAXFLOAT) {
+        
+        _leftLabel.text = @"\u221E"; // infinity
+        _leftLabel.font = [UIFont systemFontOfSize:14];
+        
+        CGRect frame;
+        
+        frame = _leftLabel.frame;
+        frame.origin.x += 40;
+        frame.size.width -= 40;
+        _leftLabel.frame = frame;
+        
+        frame =_progressSlider.frame;
+        frame.size.width += 40;
+        _progressSlider.frame = frame;
+        
+    } else {
+        
+        [_progressSlider addTarget:self
+                            action:@selector(progressDidChange:)
+                  forControlEvents:UIControlEventValueChanged];
+    }
 }
 
 - (void) setupUserInteraction
@@ -936,6 +964,13 @@ static NSMutableDictionary * gHistory;
                     }
             }
         }
+        
+        if (!_decoder.validVideo) {
+            
+            for (KxMovieFrame *frame in frames)
+                if (frame.type == KxMovieFrameTypeArtwork)
+                    self.artworkFrame = (KxArtworkFrame *)frame;
+        }
     }    
 }
 
@@ -1023,14 +1058,22 @@ static NSMutableDictionary * gHistory;
         if (frame)
             interval = [self presentVideoFrame:frame];
         
-    } else {
+    } else if (_decoder.validAudio) {
 
         //interval = _bufferedDuration * 0.5;
+                
+        if (self.artworkFrame) {
+            
+            _imageView.image = [self.artworkFrame asImage];
+            self.artworkFrame = nil;
+        }
     }
     
     if (self.playing && _startTime < 0) {
+        
         if (_decoder.validAudio)
             [self enableAudio:YES];
+        
         _startTime = [NSDate timeIntervalSinceReferenceDate] - _moviePosition;
     }
     
@@ -1046,26 +1089,7 @@ static NSMutableDictionary * gHistory;
     } else {
         
         KxVideoFrameRGB *rgbFrame = (KxVideoFrameRGB *)frame;
-        
-        CGDataProviderRef provider = CGDataProviderCreateWithCFData((__bridge CFDataRef)(rgbFrame.rgb));
-        CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-        CGImageRef cgImage = CGImageCreate(frame.width,
-                                           frame.height,
-                                           8,
-                                           24,
-                                           rgbFrame.linesize,
-                                           colorSpace,
-                                           kCGBitmapByteOrderDefault,
-                                           provider,
-                                           NULL,
-                                           YES, // NO
-                                           kCGRenderingIntentDefault);
-        CGColorSpaceRelease(colorSpace);
-        CGDataProviderRelease(provider);
-        UIImage *image = [UIImage imageWithCGImage:cgImage];
-        CGImageRelease(cgImage);
-        _imageView.image = image;
-        
+        _imageView.image = [rgbFrame asImage];
     }
     
     _moviePosition = frame.position;
@@ -1084,11 +1108,16 @@ static NSMutableDictionary * gHistory;
     if (_disableUpdateHUD)
         return;
     
-    CGFloat duration = _decoder.duration;
+    const CGFloat duration = _decoder.duration;
+    const CGFloat position = _moviePosition -_decoder.startTime;
+    
     if (_progressSlider.state == UIControlStateNormal)
-        _progressSlider.value = _moviePosition / duration;
-    _progressLabel.text = formatTimeInterval(_moviePosition, NO);
-    _leftLabel.text = formatTimeInterval(duration - _moviePosition, YES);
+        _progressSlider.value = position / duration;
+    _progressLabel.text = formatTimeInterval(position, NO);
+    
+    if (_decoder.duration != MAXFLOAT)
+        _leftLabel.text = formatTimeInterval(duration - position, YES);
+    
             
 #ifdef DEBUG
     const NSTimeInterval durationSinceStart = [NSDate timeIntervalSinceReferenceDate] - _startTime;
@@ -1104,13 +1133,10 @@ static NSMutableDictionary * gHistory;
 
 - (void) showHUD: (BOOL) show
 {
-    _hiddenHUD = !show;    
+    _hiddenHUD = !show;
     _panGestureRecognizer.enabled = _hiddenHUD;
-    
-    //[[UIApplication sharedApplication] setIdleTimerDisabled:_hiddenHUD];
 
     [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
-
     
     [UIView animateWithDuration:0.2
                           delay:0.0
@@ -1249,7 +1275,7 @@ static NSMutableDictionary * gHistory;
 - (void) handleDecoderMovieError: (NSError *) error
 {
     UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Failure", nil)
-                                                        message:[error description]
+                                                        message:[error localizedDescription]
                                                        delegate:nil
                                               cancelButtonTitle:NSLocalizedString(@"Ok", nil)
                                               otherButtonTitles:nil];

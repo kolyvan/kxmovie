@@ -31,21 +31,37 @@ FFMPEG_BUILD_ARGS_SIM = [
 FFMPEG_BUILD_ARGS_ARMV7 = [
 '--arch=arm',
 '--cpu=cortex-a8',
+'--enable-pic',
 "--extra-cflags='-arch armv7'",
 "--extra-ldflags='-arch armv7'",
-'--enable-pic',
+"--extra-cflags='-mfpu=neon -mfloat-abi=softfp -mvectorize-with-neon-quad'",
+'--enable-neon',
+'--disable-debug',
+'--enable-optimizations',
+'--disable-armv5te',
+'--disable-armv6',
+'--disable-armv6t2',
+'--disable-armvfp',
 ]
 
 FFMPEG_BUILD_ARGS_ARMV7S = [
 '--arch=arm',
 '--cpu=cortex-a8',
+'--enable-pic',
 "--extra-cflags='-arch armv7s'",
 "--extra-ldflags='-arch armv7s'",
-'--enable-pic',
+"--extra-cflags='-mfpu=neon -mfloat-abi=softfp -mvectorize-with-neon-quad'",
+'--enable-neon',
+'--disable-debug',
+'--enable-optimizations',
+'--disable-armv5te',
+'--disable-armv6',
+'--disable-armv6t2',
+'--disable-armvfp',
 ]
 
 FFMPEG_BUILD_ARGS = [
-'--disable-asm',
+#'--disable-asm',
 '--disable-ffmpeg',
 '--disable-ffplay',
 '--disable-ffserver',
@@ -54,6 +70,9 @@ FFMPEG_BUILD_ARGS = [
 '--disable-bzlib',
 '--target-os=darwin',
 '--enable-cross-compile',
+#'--enable-nonfree',
+'--enable-gpl',
+'--enable-version3',
 ]
 
 FFMPEG_LIBS = [
