@@ -1072,6 +1072,13 @@ static BOOL isNetworkPath (NSString *path)
     frame.duration = av_frame_get_pkt_duration(_audioFrame) * _audioTimeBase;
     frame.samples = data;
     
+    if (frame.duration == 0) {
+        // sometimes ffmpeg can't determine the duration of audio frame
+        // especially of wma/wmv format
+        // so in this case must compute duration
+        frame.duration = frame.samples.length / (sizeof(float) * numChannels * audioManager.samplingRate);
+    }
+    
 #if 0
     NSLog(@"AFD: %.4f %.4f | %.4f ",
           frame.position,
