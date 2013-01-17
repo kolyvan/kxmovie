@@ -245,9 +245,13 @@ end
 
 desc "Copy to output folder"
 task :copy_movie do	
-	dest = ensureDir 'output'
-	FileUtils.move Pathname.new('tmp/build/libkxmovie.a'), dest	
+	dest = ensureDir 'output'	
+	FileUtils.move Pathname.new('tmp/build/libkxmovie.a'), dest		
+	FileUtils.copy Pathname.new('libs/libavcodec.a'), dest
+	FileUtils.copy Pathname.new('libs/libavformat.a'), dest
 	FileUtils.copy Pathname.new('libs/libavutil.a'), dest
+	FileUtils.copy Pathname.new('libs/libswscale.a'), dest
+	FileUtils.copy Pathname.new('libs/libswresample.a'), dest
 	FileUtils.copy Pathname.new('kxmovie/KxMovieViewController.h'), dest	
 	FileUtils.copy Pathname.new('kxmovie/KxAudioManager.h'), dest	
 	FileUtils.copy Pathname.new('kxmovie/KxMovieDecoder.h'), dest
