@@ -1145,7 +1145,8 @@ static BOOL isNetworkPath (NSString *path)
                 
                 if (gotframe) {
                     
-                    if (_videoFrame->interlaced_frame) {
+                    if (!_disableDeinterlacing &&
+                        _videoFrame->interlaced_frame) {
 
                         avpicture_deinterlace((AVPicture*)_videoFrame,
                                               (AVPicture*)_videoFrame,

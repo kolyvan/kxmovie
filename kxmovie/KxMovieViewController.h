@@ -13,8 +13,9 @@
 
 @class KxMovieDecoder;
 
-extern NSString * const KxMovieParameterDecodeDuration;
-extern NSString * const KxMovieParameterMinBufferedDuration;
+extern NSString * const KxMovieParameterDecodeDuration;         // Float
+extern NSString * const KxMovieParameterMinBufferedDuration;    // Float
+extern NSString * const KxMovieParameterDisableDeinterlacing;   // BOOL
 
 @interface KxMovieViewController : UIViewController<UITableViewDataSource, UITableViewDelegate>
 

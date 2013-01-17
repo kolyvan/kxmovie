@@ -94,6 +94,7 @@ typedef enum {
 @property (readonly, nonatomic, strong) NSString *videoStreamFormatName;
 @property (readonly, nonatomic) BOOL isNetwork;
 @property (readonly, nonatomic) CGFloat startTime;
+@property (readwrite, nonatomic) BOOL disableDeinterlacing;
 
 + (id) movieDecoderWithContentPath: (NSString *) path
                              error: (NSError **) perror;

@@ -18,6 +18,7 @@
 
 NSString * const KxMovieParameterDecodeDuration = @"KxMovieParameterDecodeDuration";
 NSString * const KxMovieParameterMinBufferedDuration = @"KxMovieParameterMinBufferedDuration";
+NSString * const KxMovieParameterDisableDeinterlacing = @"KxMovieParameterDisableDeinterlacing";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -637,8 +638,8 @@ static NSMutableDictionary * gHistory;
             _minBufferedDuration *= 10.0;
         }
         
-        // allow runtime tweak via overwrite duration and buffering parameters
-        if (_parameters) {
+        // allow to tweak some parameters at runtime
+        if (_parameters.count) {
             
             id val;
             
@@ -649,6 +650,10 @@ static NSMutableDictionary * gHistory;
             val = [_parameters valueForKey: KxMovieParameterMinBufferedDuration];
             if ([val isKindOfClass:[NSNumber class]])
                 _minBufferedDuration = [val floatValue];
+            
+            val = [_parameters valueForKey: KxMovieParameterDisableDeinterlacing];
+            if ([val isKindOfClass:[NSNumber class]])
+                _decoder.disableDeinterlacing = [val boolValue];
         }
         
         if (self.isViewLoaded) {
