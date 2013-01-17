@@ -13,10 +13,13 @@
 
 @class KxMovieDecoder;
 
+extern NSString * const KxMovieParameterDecodeDuration;
+extern NSString * const KxMovieParameterMinBufferedDuration;
 
 @interface KxMovieViewController : UIViewController<UITableViewDataSource, UITableViewDelegate>
 
-+ (id) movieViewControllerWithContentPath: (NSString *) path;
++ (id) movieViewControllerWithContentPath: (NSString *) path
+                               parameters: (NSDictionary *) parameters;
 
 @property (readonly) BOOL playing;
 

@@ -16,6 +16,8 @@
 #import "KxAudioManager.h"
 #import "KxMovieGLView.h"
 
+NSString * const KxMovieParameterDecodeDuration = @"KxMovieParameterDecodeDuration";
+NSString * const KxMovieParameterMinBufferedDuration = @"KxMovieParameterMinBufferedDuration";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -71,7 +73,8 @@ enum {
 static NSMutableDictionary * gHistory;
 
 #define DEFAULT_DECODE_DURATION   0.1
-#define NETWORK_BUFFERED_DURATION 2.0
+#define LOCAL_BUFFERED_DURATION   0.3
+#define NETWORK_BUFFERED_DURATION 3.0
 
 @interface KxMovieViewController () {
 
@@ -119,8 +122,11 @@ static NSMutableDictionary * gHistory;
     CGFloat             _decodeDuration;
     CGFloat             _bufferedDuration;
     CGFloat             _minBufferedDuration;
+    BOOL                _buffered;
     
     BOOL                _savedIdleTimer;
+    
+    NSDictionary        *_parameters;
 }
 
 @property (readwrite) BOOL playing;
@@ -136,13 +142,15 @@ static NSMutableDictionary * gHistory;
 }
 
 + (id) movieViewControllerWithContentPath: (NSString *) path
-{
+                               parameters: (NSDictionary *) parameters
+{    
     id<KxAudioManager> audioManager = [KxAudioManager audioManager];
     [audioManager activateAudioSession];    
-    return [[KxMovieViewController alloc] initWithContentPath: path];
+    return [[KxMovieViewController alloc] initWithContentPath: path parameters: parameters];
 }
 
 - (id) initWithContentPath: (NSString *) path
+                parameters: (NSDictionary *) parameters
 {
     NSAssert(path.length > 0, @"empty path");
     
@@ -152,6 +160,11 @@ static NSMutableDictionary * gHistory;
         _moviePosition = 0;
         _startTime = -1;
         self.wantsFullScreenLayout = YES;
+        
+        _decodeDuration = DEFAULT_DECODE_DURATION;
+        _minBufferedDuration = LOCAL_BUFFERED_DURATION;
+        
+        _parameters = parameters;
         
         __weak KxMovieViewController *weakSelf = self;
         
@@ -385,7 +398,7 @@ static NSMutableDictionary * gHistory;
     // NSLog(@"viewDidAppear");
     
     [super viewDidAppear:animated];
-    
+        
     if (self.presentingViewController)
         [self fullscreenMode:YES];
     
@@ -435,6 +448,9 @@ static NSMutableDictionary * gHistory;
         [self fullscreenMode:NO];
         
     [[UIApplication sharedApplication] setIdleTimerDisabled:_savedIdleTimer];
+    
+    [_activityIndicatorView stopAnimating];
+    _buffered = NO;
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
@@ -612,13 +628,27 @@ static NSMutableDictionary * gHistory;
         _audioFrames    = [NSMutableArray array];
         _scheduledLock  = [[NSLock alloc] init];
         
-        _decodeDuration = DEFAULT_DECODE_DURATION;
-        _minBufferedDuration = _decoder.isNetwork ? NETWORK_BUFFERED_DURATION : DEFAULT_DECODE_DURATION;
+        if (_decoder.isNetwork)
+            _minBufferedDuration = NETWORK_BUFFERED_DURATION;
         
         if (!_decoder.validVideo) {
             
             _decodeDuration *= 10.0;
             _minBufferedDuration *= 10.0;
+        }
+        
+        // allow runtime tweak via overwrite duration and buffering parameters
+        if (_parameters) {
+            
+            id val;
+            
+            val = [_parameters valueForKey:KxMovieParameterDecodeDuration];
+            if ([val isKindOfClass:[NSNumber class]])
+                _decodeDuration = [val floatValue];
+            
+            val = [_parameters valueForKey: KxMovieParameterMinBufferedDuration];
+            if ([val isKindOfClass:[NSNumber class]])
+                _minBufferedDuration = [val floatValue];
         }
         
         if (self.isViewLoaded) {
@@ -748,7 +778,12 @@ static NSMutableDictionary * gHistory;
 {
     //fillSignalF(outData,numFrames,numChannels);
     //return;
-        
+
+    if (_buffered) {
+        memset(outData, 0, numFrames * numChannels * sizeof(float));
+        return;
+    }
+   
     @autoreleasepool {
         
         while (numFrames > 0) {
@@ -931,7 +966,17 @@ static NSMutableDictionary * gHistory;
     if (!self.playing)
         return;
     
-    CGFloat interval = [self presentFrame];
+    //CGFloat interval = [self presentFrame];
+    
+    if (_buffered && _bufferedDuration > _minBufferedDuration) {
+        
+        _buffered = NO;
+        [_activityIndicatorView stopAnimating];        
+    }
+    
+    CGFloat interval = 0;
+    if (!_buffered)
+        interval = [self presentFrame];
     
     const NSUInteger leftFrames =
         (_decoder.validVideo ? _videoFrames.count : 0) +
@@ -944,7 +989,13 @@ static NSMutableDictionary * gHistory;
             [self pause];
             [self updateHUD];
             return;
-        } 
+        }
+
+        if (!_buffered) {
+
+            _buffered = YES;
+            [_activityIndicatorView startAnimating];            
+        }
     }
     
     if (_bufferedDuration < _minBufferedDuration) {
@@ -1047,13 +1098,14 @@ static NSMutableDictionary * gHistory;
             
 #ifdef DEBUG
     const NSTimeInterval durationSinceStart = [NSDate timeIntervalSinceReferenceDate] - _startTime;
-    _messageLabel.text = [NSString stringWithFormat:@"%d %d %d - %@%@ %@",
+    _messageLabel.text = [NSString stringWithFormat:@"%d %d %d - %@%@ %@\n%@",
                           _videoFrames.count,
                           _audioFrames.count,
                           _scheduledDecode,
                           formatTimeInterval(durationSinceStart, NO),
                           durationSinceStart > _moviePosition + 0.5 ? @" (lags)" : @"",
-                          _decoder.isEOF ? @"- END" : @""];
+                          _decoder.isEOF ? @"- END" : @"",
+                          _buffered ? [NSString stringWithFormat:@"buffering %.1f%%", _bufferedDuration / _minBufferedDuration * 100] : @""];
 #endif
 }
 

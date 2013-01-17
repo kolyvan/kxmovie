@@ -189,6 +189,7 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
     NSString *path;
+    NSDictionary *parameters;
     
     if (indexPath.section == 0) {
         
@@ -198,8 +199,12 @@
         
         path = _localMovies[indexPath.row];
     }
-
-    KxMovieViewController *vc = [KxMovieViewController movieViewControllerWithContentPath:path];
+    
+    if ([path.pathExtension isEqualToString:@"wmv"])
+        parameters = @{ KxMovieParameterMinBufferedDuration:@(5.0) };
+    
+    KxMovieViewController *vc = [KxMovieViewController movieViewControllerWithContentPath:path
+                                                                               parameters:parameters];
     [self presentViewController:vc animated:YES completion:nil];
     //[self.navigationController pushViewController:vc animated:YES];    
 }
