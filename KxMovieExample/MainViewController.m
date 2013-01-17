@@ -34,7 +34,7 @@
             @"rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov",
             @"http://santai.tv/vod/test/test_format_1.3gp",
             @"http://santai.tv/vod/test/test_format_1.mp4",
-        
+            @"http://202.198.100.1:81//p=14.ts",
             //@"rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov",
             //@"http://santai.tv/vod/test/BigBuckBunny_175k.mov",
         
@@ -91,6 +91,7 @@
     NSString *folder = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
                                                             NSUserDomainMask,
                                                             YES) lastObject];
+    NSLog(@".......%@", folder);
     NSArray *contents = [fm contentsOfDirectoryAtPath:folder error:nil];
     
     for (NSString *filename in contents) {
@@ -121,6 +122,7 @@
                         [ext isEqualToString:@"mkv"] ||
                         [ext isEqualToString:@"mpeg"]||
                         [ext isEqualToString:@"mpg"] ||
+                        [ext isEqualToString:@"avs"] ||
                         [ext isEqualToString:@"flv"] ||
                         [ext isEqualToString:@"vob"]) {
                         
@@ -210,6 +212,10 @@
     
     KxMovieViewController *vc = [KxMovieViewController movieViewControllerWithContentPath:path
                                                                                parameters:parameters];
+    vc.isFullscreen = YES;
+    vc.isLive = YES;
+    [vc fullscreenMode:NO];
+    vc.name = @"xxxxxx一部电影";
     [self presentViewController:vc animated:YES completion:nil];
     //[self.navigationController pushViewController:vc animated:YES];    
 }

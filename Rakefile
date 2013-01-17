@@ -259,6 +259,7 @@ task :copy_movie do
 end	
 
 ##
+task :clean_movie => [:clean_movie_debug, :clean_movie_release]
 task :clean => [:clean_movie_debug, :clean_movie_release, :clean_ffmpeg]
 task :build_ffmpeg => [:check_gas_preprocessor, :build_ffmpeg_i386, :build_ffmpeg_armv7, :build_ffmpeg_armv7s, :build_ffmpeg_universal]
 #task :build_movie => [:build_movie_debug, :copy_movie] 

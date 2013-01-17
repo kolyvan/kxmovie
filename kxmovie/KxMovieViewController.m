@@ -108,6 +108,7 @@ static NSMutableDictionary * gHistory;
     UIButton            *_doneButton;
     UILabel             *_progressLabel;
     UILabel             *_leftLabel;
+    UILabel             *titleLabel;
     UIButton            *_infoButton;
     UITableView         *_tableView;
     UIActivityIndicatorView *_activityIndicatorView;
@@ -136,6 +137,8 @@ static NSMutableDictionary * gHistory;
 
 @implementation KxMovieViewController
 
+@synthesize isLive, isAlive, isFullscreen, name, playPath;
+
 + (void)initialize
 {
     if (!gHistory)
@@ -153,11 +156,14 @@ static NSMutableDictionary * gHistory;
 - (id) initWithContentPath: (NSString *) path
                 parameters: (NSDictionary *) parameters
 {
+
     NSAssert(path.length > 0, @"empty path");
-    
+    playPath = path;
     self = [super initWithNibName:nil bundle:nil];
     if (self) {
-        
+        isLive = NO;
+        isFullscreen = YES;
+        self.isAlive = YES;
         _moviePosition = 0;
         _startTime = -1;
         self.wantsFullScreenLayout = YES;
@@ -175,7 +181,7 @@ static NSMutableDictionary * gHistory;
             KxMovieDecoder *decoder;
             decoder = [KxMovieDecoder movieDecoderWithContentPath:path error:&error];
             
-            NSLog(@"movie loaded");
+            NSLog(@"KxMovie load video %@", path);
             
             __strong KxMovieViewController *strongSelf = weakSelf;
             if (strongSelf) {
@@ -195,7 +201,7 @@ static NSMutableDictionary * gHistory;
     // NSLog(@"%@ dealloc", self);
     
     [self pause];
-    
+    self.isAlive = NO;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     
     if (_dispatchQueue) {
@@ -230,7 +236,7 @@ static NSMutableDictionary * gHistory;
     _messageLabel.numberOfLines = 2;
     _messageLabel.textAlignment = NSTextAlignmentCenter;
     _messageLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-    [self.view addSubview:_messageLabel];
+    //[self.view addSubview:_messageLabel];
 #endif
     
     _topHUD      = [[HudView alloc] initWithFrame:CGRectMake(0,0,0,0)];
@@ -239,23 +245,42 @@ static NSMutableDictionary * gHistory;
     _topHUD.opaque = NO;
     _bottomHUD.opaque = NO;
     
-    _topHUD.frame = CGRectMake(0,0,width,30);
-    _bottomHUD.frame = CGRectMake(30,height-(75+15),width-(30*2),75);
+    _topHUD.frame = CGRectMake(0, 0, width, 40);
+    
+    _bottomHUD.frame = CGRectMake(30,height-70,width-(30*2),55);
     
     _topHUD.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    
     _bottomHUD.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleLeftMargin;
+    //[self.view addSubview:_topHUD];
+    if(!isLive)
+    {
+        [self.view addSubview:_bottomHUD];
+    }
     
-    [self.view addSubview:_topHUD];
-    [self.view addSubview:_bottomHUD];
-    
+    _topHUD.backgroundColor = [UIColor darkGrayColor];
     // top hud
-    
-    _doneButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    _doneButton.frame = CGRectMake(0,4,50,24);
+    _doneButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+
+    BOOL isLandscape = UIInterfaceOrientationIsLandscape([[UIDevice currentDevice] orientation]);
+    //NSLog(@"bounds is : %f %f", bounds.size.width, bounds.size.height);
+    if ( UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad || isLandscape)
+    {
+        _doneButton.frame = CGRectMake(bounds.size.height-60, 2, 50, 36);
+        //noOfRows = self.numberOfColumns;
+    }
+    else{
+        _doneButton.frame = CGRectMake(bounds.size.width-60, 2, 50, 36);
+    }
     _doneButton.backgroundColor = [UIColor clearColor];
-    [_doneButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    [_doneButton setTitle:NSLocalizedString(@"Done", nil) forState:UIControlStateNormal];
-    _doneButton.titleLabel.font = [UIFont systemFontOfSize:12];
+    _doneButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentCenter;
+    _doneButton.autoresizingMask = UIViewAutoresizingFlexibleHeight;
+    _doneButton.contentVerticalAlignment = UIControlContentHorizontalAlignmentCenter;
+
+    //_doneButton.ti
+    [_doneButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [_doneButton setTitle:NSLocalizedString(@"返回", nil) forState:UIControlStateNormal];
+    _doneButton.titleLabel.font = [UIFont fontWithName:@"TrebuchetMS-Bold" size:14.5];
     _doneButton.showsTouchWhenHighlighted = YES;
     [_doneButton addTarget:self action:@selector(doneDidTouch:) forControlEvents:UIControlEventTouchUpInside];
     
@@ -263,8 +288,9 @@ static NSMutableDictionary * gHistory;
     _progressLabel.backgroundColor = [UIColor clearColor];
     _progressLabel.opaque = NO;
     _progressLabel.adjustsFontSizeToFitWidth = NO;
-    _progressLabel.textAlignment = UITextAlignmentRight;
+    _progressLabel.textAlignment = UITextAlignmentLeft;
     _progressLabel.textColor = [UIColor whiteColor];
+
     _progressLabel.text = @"00:00:00";
     _progressLabel.font = [UIFont systemFontOfSize:12];
     
@@ -275,6 +301,22 @@ static NSMutableDictionary * gHistory;
     [_progressSlider setThumbImage:[UIImage imageNamed:@"kxmovie.bundle/sliderthumb"]
                           forState:UIControlStateNormal];
     
+/*
+    titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(10,0, 240, 40)];
+    titleLabel.backgroundColor = [UIColor clearColor];
+    //titleLabel.adjustsFontSizeToFitWidth = YES;
+    titleLabel.font = [UIFont fontWithName:@"TrebuchetMS-Bold" size:14];
+    titleLabel.textAlignment = UITextAlignmentLeft;
+    titleLabel.textColor = [UIColor whiteColor];
+    NSString *tmpString = @" 正在播放: ";
+    if (self.name) {
+        titleLabel.text = [tmpString stringByAppendingString:self.name];
+    }
+    //titleLabel.font = [UIFont systemFontOfSize:13];
+    titleLabel.autoresizingMask = UIViewAutoresizingFlexibleHeight;
+    [_topHUD addSubview:titleLabel];
+
+*/
     _leftLabel = [[UILabel alloc] initWithFrame:CGRectMake(width-80,5,60,20)];
     _leftLabel.backgroundColor = [UIColor clearColor];
     _leftLabel.opaque = NO;
@@ -292,10 +334,17 @@ static NSMutableDictionary * gHistory;
     [_infoButton addTarget:self action:@selector(infoDidTouch:) forControlEvents:UIControlEventTouchUpInside];
     
     [_topHUD addSubview:_doneButton];
-    [_topHUD addSubview:_progressLabel];
-    [_topHUD addSubview:_progressSlider];
-    [_topHUD addSubview:_leftLabel];
-    [_topHUD addSubview:_infoButton];
+    if(!isLive){
+        NSLog(@"has process bar when play live stream");
+        [_bottomHUD addSubview:_progressLabel];
+        [_bottomHUD addSubview:_progressSlider];
+    }
+    else{
+        _progressSlider.hidden = YES;
+    }
+
+    //[_topHUD addSubview:_leftLabel];
+    //[_topHUD addSubview:_infoButton];
     
     // bottom hud
     
@@ -330,7 +379,7 @@ static NSMutableDictionary * gHistory;
     [_bottomHUD addSubview:_rewindButton];
     [_bottomHUD addSubview:_playButton];
     [_bottomHUD addSubview:_forwardButton];
-    [_bottomHUD addSubview:_volumeSlider];
+    //[_bottomHUD addSubview:_volumeSlider];
     
     // gradients
     
@@ -367,7 +416,8 @@ static NSMutableDictionary * gHistory;
                           [NSNumber numberWithFloat:0.0f],
                           [NSNumber numberWithFloat:0.5],
                           nil];
-    [_topHUD.layer insertSublayer:gradient atIndex:0];
+    if(!isLive)
+        [_topHUD.layer insertSublayer:gradient atIndex:0];
     
     if (_decoder) {
         
@@ -386,12 +436,23 @@ static NSMutableDictionary * gHistory;
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    // [self setupUserInteraction];
+    [self showHUD: _hiddenHUD];
+    UIView *frameView = [self frameView];
+    
+    if (frameView.contentMode == UIViewContentModeScaleAspectFit)
+        frameView.contentMode = UIViewContentModeScaleAspectFill;
+    else
+        frameView.contentMode = UIViewContentModeScaleAspectFit;
 }
 
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];    
+}
+
+-(void) viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:YES];
+    [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
 }
 
 - (void) viewDidAppear:(BOOL)animated
@@ -424,12 +485,14 @@ static NSMutableDictionary * gHistory;
                                              selector:@selector(applicationWillResignActive:)
                                                  name:UIApplicationWillResignActiveNotification
                                                object:[UIApplication sharedApplication]];
+    [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
+
 }
+
 
 - (void) viewWillDisappear:(BOOL)animated
 {    
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-    
     [super viewWillDisappear:animated];
     
     [_activityIndicatorView stopAnimating];
@@ -444,27 +507,28 @@ static NSMutableDictionary * gHistory;
             [gHistory setValue:[NSNumber numberWithFloat:_moviePosition]
                         forKey:_decoder.path];
     }
-    
-    if (_fullscreen)
-        [self fullscreenMode:NO];
-        
+
     [[UIApplication sharedApplication] setIdleTimerDisabled:_savedIdleTimer];
     
     [_activityIndicatorView stopAnimating];
     _buffered = NO;
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-    return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
-}
-
 - (void) applicationWillResignActive: (NSNotification *)notification
 {
     [self showHUD:YES];
     [self pause];
-    
-    NSLog(@"applicationWillResignActive");    
+    if(self.isLive){
+        //[self dismissModalViewControllerAnimated:YES];
+    }
+    NSLog(@"applicationWillResignActive");
+}
+
+- (void) applicationWillActive: (NSNotification *)notification
+{
+    [self showHUD:YES];
+    [self restorePlay];
+    NSLog(@"applicationWillActive");
 }
 
 #pragma mark - gesture recognizer
@@ -578,10 +642,17 @@ static NSMutableDictionary * gHistory;
 
 - (void) doneDidTouch: (id) sender
 {
-    if (self.presentingViewController || !self.navigationController)
+    
+    if (self.presentingViewController || !self.navigationController){
+        NSLog(@"[self dismissViewControllerAnimated:YES completion:nil];  %@", self);
         [self dismissViewControllerAnimated:YES completion:nil];
+    }
     else
+    {
         [self.navigationController popViewControllerAnimated:YES];
+    }
+    
+    self.isAlive = NO;
 }
 
 - (void) infoDidTouch: (id) sender
@@ -663,8 +734,8 @@ static NSMutableDictionary * gHistory;
             _bottomHUD.hidden       = NO;
             _progressLabel.hidden   = NO;
             _progressSlider.hidden  = NO;
-            _leftLabel.hidden       = NO;
-            _infoButton.hidden      = NO;
+            _leftLabel.hidden       = YES;
+            _infoButton.hidden      = YES;
             
             if (_activityIndicatorView.isAnimating) {
                 
@@ -809,7 +880,7 @@ static NSMutableDictionary * gHistory;
                             
                             if (delta < -2.0) {
                                 
-                                NSLog(@"desync audio (outrun) wait %.4f %.4f", _moviePosition, frame.position);
+                                //NSLog(@"desync audio (outrun) wait %.4f %.4f", _moviePosition, frame.position);
                                 memset(outData, 0, numFrames * numChannels * sizeof(float));
                                 break; // silence and exit
                             }
@@ -818,7 +889,7 @@ static NSMutableDictionary * gHistory;
                             
                             if (delta > 2.0 && count > 1) {
                                 
-                                NSLog(@"desync audio (lags) skip %.4f %.4f", _moviePosition, frame.position);
+                                //NSLog(@"desync audio (lags) skip %.4f %.4f", _moviePosition, frame.position);
                                 continue;
                             }
                             
@@ -1116,10 +1187,10 @@ static NSMutableDictionary * gHistory;
 
 - (void) showHUD: (BOOL) show
 {
-    _hiddenHUD = !show;    
+    _hiddenHUD = !show;
     _panGestureRecognizer.enabled = _hiddenHUD;
-        
-    [[UIApplication sharedApplication] setIdleTimerDisabled:_hiddenHUD];
+
+    [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
     
     [UIView animateWithDuration:0.2
                           delay:0.0
@@ -1398,6 +1469,19 @@ static NSMutableDictionary * gHistory;
             }
         }
     }
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    if ( UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad )
+    {
+        return (interfaceOrientation == UIInterfaceOrientationLandscapeLeft || interfaceOrientation == UIInterfaceOrientationLandscapeRight);
+    }
+    return NO;
+}
+
+-(BOOL)shouldAutorotate{
+    return NO;
 }
 
 @end

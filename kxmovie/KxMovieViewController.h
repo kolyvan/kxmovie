@@ -23,8 +23,14 @@ extern NSString * const KxMovieParameterDisableDeinterlacing;   // BOOL
                                parameters: (NSDictionary *) parameters;
 
 @property (readonly) BOOL playing;
+@property (readwrite) BOOL isFullscreen;
+@property (readwrite) BOOL isLive;
+@property (readwrite) BOOL isAlive;
+@property (nonatomic, retain) NSString *name;
+@property (nonatomic, retain) NSString *playPath;
 
 - (void) play;
 - (void) pause;
+- (void) fullscreenMode: (BOOL) on;
 
 @end
