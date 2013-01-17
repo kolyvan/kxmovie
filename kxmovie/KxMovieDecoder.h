@@ -32,6 +32,7 @@ typedef enum {
     
     KxMovieFrameTypeAudio,
     KxMovieFrameTypeVideo,
+    KxMovieFrameTypeArtwork,
     
 } KxMovieFrameType;
 
@@ -61,6 +62,7 @@ typedef enum {
 @interface KxVideoFrameRGB : KxVideoFrame
 @property (readonly, nonatomic) NSUInteger linesize;
 @property (readonly, nonatomic, strong) NSData *rgb;
+- (UIImage *) asImage;
 @end
 
 @interface KxVideoFrameYUV : KxVideoFrame
@@ -69,10 +71,14 @@ typedef enum {
 @property (readonly, nonatomic, strong) NSData *chromaR;
 @end
 
+@interface KxArtworkFrame : KxMovieFrame
+@property (readonly, nonatomic, strong) NSData *picture;
+- (UIImage *) asImage;
+@end
 
 @interface KxMovieDecoder : NSObject
 
-@property (readonly, nonatomic) NSString *path;
+@property (readonly, nonatomic, strong) NSString *path;
 @property (readonly, nonatomic) BOOL isEOF;
 @property (readwrite,nonatomic) CGFloat position;
 @property (readonly, nonatomic) CGFloat duration;
@@ -84,8 +90,8 @@ typedef enum {
 @property (readwrite,nonatomic) NSInteger selectedAudioStream;
 @property (readonly, nonatomic) BOOL validVideo;
 @property (readonly, nonatomic) BOOL validAudio;
-@property (readonly, nonatomic) NSDictionary *info;
-@property (readonly, nonatomic) NSString* videoStreamFormatName;
+@property (readonly, nonatomic, strong) NSDictionary *info;
+@property (readonly, nonatomic, strong) NSString *videoStreamFormatName;
 @property (readonly, nonatomic) BOOL isNetwork;
 @property (readonly, nonatomic) CGFloat startTime;
 

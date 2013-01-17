@@ -124,6 +124,7 @@ static NSMutableDictionary * gHistory;
 }
 
 @property (readwrite) BOOL playing;
+@property (readwrite, strong) KxArtworkFrame *artworkFrame;
 @end
 
 @implementation KxMovieViewController
@@ -650,13 +651,11 @@ static NSMutableDictionary * gHistory;
 
 - (void) restorePlay
 {
-    // NSLog(@"restorePlay");
-    
     NSNumber *n = [gHistory valueForKey:_decoder.path];
     if (n)
         [self updatePosition:n.floatValue playMode:YES];
     else
-        [self play];    
+        [self play];
 }
 
 - (void) setupPresentView
@@ -665,7 +664,6 @@ static NSMutableDictionary * gHistory;
     
     if (_decoder.validVideo) {
         _glView = [[KxMovieGLView alloc] initWithFrame:bounds decoder:_decoder];
-        
     } 
     
     if (!_glView) {
@@ -892,6 +890,13 @@ static NSMutableDictionary * gHistory;
                     }
             }
         }
+        
+        if (!_decoder.validVideo) {
+            
+            for (KxMovieFrame *frame in frames)
+                if (frame.type == KxMovieFrameTypeArtwork)
+                    self.artworkFrame = (KxArtworkFrame *)frame;
+        }
     }    
 }
 
@@ -979,14 +984,22 @@ static NSMutableDictionary * gHistory;
         if (frame)
             interval = [self presentVideoFrame:frame];
         
-    } else {
+    } else if (_decoder.validAudio) {
 
         //interval = _bufferedDuration * 0.5;
+                
+        if (self.artworkFrame) {
+            
+            _imageView.image = [self.artworkFrame asImage];
+            self.artworkFrame = nil;
+        }
     }
     
     if (self.playing && _startTime < 0) {
+        
         if (_decoder.validAudio)
             [self enableAudio:YES];
+        
         _startTime = [NSDate timeIntervalSinceReferenceDate] - _moviePosition;
     }
     
@@ -1002,26 +1015,7 @@ static NSMutableDictionary * gHistory;
     } else {
         
         KxVideoFrameRGB *rgbFrame = (KxVideoFrameRGB *)frame;
-        
-        CGDataProviderRef provider = CGDataProviderCreateWithCFData((__bridge CFDataRef)(rgbFrame.rgb));
-        CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-        CGImageRef cgImage = CGImageCreate(frame.width,
-                                           frame.height,
-                                           8,
-                                           24,
-                                           rgbFrame.linesize,
-                                           colorSpace,
-                                           kCGBitmapByteOrderDefault,
-                                           provider,
-                                           NULL,
-                                           YES, // NO
-                                           kCGRenderingIntentDefault);
-        CGColorSpaceRelease(colorSpace);
-        CGDataProviderRelease(provider);
-        UIImage *image = [UIImage imageWithCGImage:cgImage];
-        CGImageRelease(cgImage);
-        _imageView.image = image;
-        
+        _imageView.image = [rgbFrame asImage];
     }
     
     _moviePosition = frame.position;

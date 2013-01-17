@@ -303,6 +303,37 @@ static BOOL isNetworkPath (NSString *path)
 
 @implementation KxVideoFrameRGB
 - (KxVideoFrameFormat) format { return KxVideoFrameFormatRGB; }
+- (UIImage *) asImage
+{
+    UIImage *image = nil;
+    
+    CGDataProviderRef provider = CGDataProviderCreateWithCFData((__bridge CFDataRef)(_rgb));
+    if (provider) {
+        CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+        if (colorSpace) {
+            CGImageRef imageRef = CGImageCreate(self.width,
+                                                self.height,
+                                                8,
+                                                24,
+                                                self.linesize,
+                                                colorSpace,
+                                                kCGBitmapByteOrderDefault,
+                                                provider,
+                                                NULL,
+                                                YES, // NO
+                                                kCGRenderingIntentDefault);
+            
+            if (imageRef) {
+                image = [UIImage imageWithCGImage:imageRef];
+                CGImageRelease(imageRef);
+            }
+            CGColorSpaceRelease(colorSpace);
+        }
+        CGDataProviderRelease(provider);
+    }
+    
+    return image;
+}
 @end
 
 @interface KxVideoFrameYUV()
@@ -313,6 +344,36 @@ static BOOL isNetworkPath (NSString *path)
 
 @implementation KxVideoFrameYUV
 - (KxVideoFrameFormat) format { return KxVideoFrameFormatYUV; }
+@end
+
+@interface KxArtworkFrame()
+@property (readwrite, nonatomic, strong) NSData *picture;
+@end
+
+@implementation KxArtworkFrame
+- (KxMovieFrameType) type { return KxMovieFrameTypeArtwork; }
+- (UIImage *) asImage
+{
+    UIImage *image = nil;
+    
+    CGDataProviderRef provider = CGDataProviderCreateWithCFData((__bridge CFDataRef)(_picture));
+    if (provider) {
+        
+        CGImageRef imageRef = CGImageCreateWithJPEGDataProvider(provider,
+                                                                NULL,
+                                                                YES,
+                                                                kCGRenderingIntentDefault);
+        if (imageRef) {
+            
+            image = [UIImage imageWithCGImage:imageRef];
+            CGImageRelease(imageRef);
+        }
+        CGDataProviderRelease(provider);
+    }
+    
+    return image;
+
+}
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -339,6 +400,7 @@ static BOOL isNetworkPath (NSString *path)
     NSUInteger          _swrBufferSize;
     NSDictionary        *_info;
     KxVideoFrameFormat  _videoFrameFormat;
+    NSUInteger          _artworkStream;
 }
 @end
 
@@ -623,13 +685,24 @@ static BOOL isNetworkPath (NSString *path)
 {
     kxMovieError errCode = kxMovieErrorStreamNotFound;
     _videoStream = -1;
+    _artworkStream = -1;
     _videoStreams = collectStreams(_formatCtx, AVMEDIA_TYPE_VIDEO);
     for (NSNumber *n in _videoStreams) {
         
-        errCode = [self openVideoStream: n.integerValue];
-        if (errCode == kxMovieErrorNone)
-            break;
+        const NSUInteger iStream = n.integerValue;
+
+        if (0 == (_formatCtx->streams[iStream]->disposition & AV_DISPOSITION_ATTACHED_PIC)) {
+        
+            errCode = [self openVideoStream: iStream];
+            if (errCode == kxMovieErrorNone)
+                break;
+            
+        } else {
+            
+            _artworkStream = iStream;
+        }
     }
+    
     return errCode;
 }
 
@@ -674,6 +747,7 @@ static BOOL isNetworkPath (NSString *path)
           _videoTimeBase);
     
     NSLog(@"video start time %f", st->start_time * _videoTimeBase);
+    NSLog(@"video disposition %d", st->disposition);
     
     return kxMovieErrorNone;
 }
@@ -1129,9 +1203,18 @@ static BOOL isNetworkPath (NSString *path)
                     break;
                 
                 pktSize -= len;
-            }            
+            }
+            
+        } else if (packet.stream_index == _artworkStream) {
+            
+            if (packet.size) {
+
+                KxArtworkFrame *frame = [[KxArtworkFrame alloc] init];
+                frame.picture = [NSData dataWithBytes:packet.data length:packet.size];
+                [result addObject:frame];
+            }
         }
-        
+
         av_free_packet(&packet);
 	}
     
