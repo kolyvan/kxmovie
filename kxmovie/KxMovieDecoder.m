@@ -1108,7 +1108,7 @@ static BOOL isNetworkPath (NSString *path)
 {  
     if (format == KxVideoFrameFormatYUV &&
         _videoCodecCtx &&
-        _videoCodecCtx->pix_fmt == AV_PIX_FMT_YUV420P) {
+        (_videoCodecCtx->pix_fmt == AV_PIX_FMT_YUV420P || _videoCodecCtx->pix_fmt == AV_PIX_FMT_YUVJ420P)) {
         
         _videoFrameFormat = KxVideoFrameFormatYUV;
         return YES;
