@@ -225,8 +225,10 @@ static void avStreamFPSTimeBase(AVStream *st, CGFloat defaultTimeBase, CGFloat *
         //timebase *= st->codec->ticks_per_frame;
     }
          
-    if(st->avg_frame_rate.den && st->avg_frame_rate.num)
+    if (st->avg_frame_rate.den && st->avg_frame_rate.num)
         fps = av_q2d(st->avg_frame_rate);
+    else if (st->r_frame_rate.den && st->r_frame_rate.num)
+        fps = av_q2d(st->r_frame_rate);
     else
         fps = 1.0 / timebase;
     
@@ -985,13 +987,24 @@ static BOOL isNetworkPath (NSString *path)
     frame.width = _videoCodecCtx->width;
     frame.height = _videoCodecCtx->height;
     frame.position = av_frame_get_best_effort_timestamp(_videoFrame) * _videoTimeBase;
-    frame.duration = av_frame_get_pkt_duration(_videoFrame) * _videoTimeBase;
-    frame.duration += _videoFrame->repeat_pict * _videoTimeBase * 0.5;
     
-    if (_videoFrame->repeat_pict > 0) {
-        NSLog(@"_videoFrame.repeat_pict %d", _videoFrame->repeat_pict);
-    }
+    const int64_t frameDuration = av_frame_get_pkt_duration(_videoFrame);
+    if (frameDuration) {
         
+        frame.duration = frameDuration * _videoTimeBase;
+        frame.duration += _videoFrame->repeat_pict * _videoTimeBase * 0.5;
+        
+        //if (_videoFrame->repeat_pict > 0) {
+        //    NSLog(@"_videoFrame.repeat_pict %d", _videoFrame->repeat_pict);
+        //}
+        
+    } else {
+        
+        // sometimes, ffmpeg unable to determine a frame duration
+        // as example yuvj420p stream from web camera
+        frame.duration = 1.0 / _fps;
+    }    
+    
 #if 0
     NSLog(@"VFD: %.4f %.4f | %lld ",
           frame.position,
