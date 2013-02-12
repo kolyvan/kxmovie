@@ -970,9 +970,7 @@ static NSMutableDictionary * gHistory;
 {
     if (!self.playing)
         return;
-    
-    //CGFloat interval = [self presentFrame];
-    
+        
     if (_buffered && _bufferedDuration > _minBufferedDuration) {
         
         _buffered = NO;
@@ -996,14 +994,14 @@ static NSMutableDictionary * gHistory;
             return;
         }
 
-        if (!_buffered) {
+        if (_minBufferedDuration > 0 && !_buffered) {
 
             _buffered = YES;
             [_activityIndicatorView startAnimating];            
         }
     }
     
-    if (_bufferedDuration < _minBufferedDuration) {
+    if (_bufferedDuration <= _minBufferedDuration) {
         
         [self scheduleDecodeFrames];
     }
