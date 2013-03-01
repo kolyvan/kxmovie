@@ -42,7 +42,7 @@ FFMPEG_BUILD_ARGS_ARMV7 = [
 '--disable-armv5te',
 '--disable-armv6',
 '--disable-armv6t2',
-'--disable-armvfp',
+'--disable-vfp',
 ]
 
 FFMPEG_BUILD_ARGS_ARMV7S = [
@@ -58,7 +58,7 @@ FFMPEG_BUILD_ARGS_ARMV7S = [
 '--disable-armv5te',
 '--disable-armv6',
 '--disable-armv6t2',
-'--disable-armvfp',
+'--disable-vfp',
 ]
 
 FFMPEG_BUILD_ARGS = [
