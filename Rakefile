@@ -27,6 +27,7 @@ FFMPEG_BUILD_ARGS_SIM = [
 '--cpu=i386',
 "--extra-ldflags='-arch i386'",
 "--extra-cflags='-arch i386'",
+'--disable-asm',
 ]
 
 FFMPEG_BUILD_ARGS_ARMV7 = [
@@ -42,7 +43,8 @@ FFMPEG_BUILD_ARGS_ARMV7 = [
 '--disable-armv5te',
 '--disable-armv6',
 '--disable-armv6t2',
-'--disable-armvfp',
+'--disable-vfp',
+'--disable-asm',
 ]
 
 FFMPEG_BUILD_ARGS_ARMV7S = [
@@ -58,7 +60,8 @@ FFMPEG_BUILD_ARGS_ARMV7S = [
 '--disable-armv5te',
 '--disable-armv6',
 '--disable-armv6t2',
-'--disable-armvfp',
+'--disable-vfp',
+'--disable-asm',
 ]
 
 FFMPEG_BUILD_ARGS = [
