@@ -29,6 +29,8 @@
         self.tabBarItem = [[UITabBarItem alloc] initWithTabBarSystemItem:UITabBarSystemItemFeatured tag: 0];
         
         _remoteMovies = @[
+
+            @"http://liveipad.wasu.cn/cctv2_ipad/z.m3u8",                          
             @"http://www.wowza.com/_h264/BigBuckBunny_175k.mov",
             // @"http://www.wowza.com/_h264/BigBuckBunny_115k.mov",
             @"rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov",

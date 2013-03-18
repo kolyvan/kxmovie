@@ -89,7 +89,7 @@ static NSMutableDictionary * gHistory;
     BOOL                _disableUpdateHUD;
     NSInteger           _scheduledDecode;
     NSLock              *_scheduledLock;
-    NSTimeInterval      _startTime;    
+    NSTimeInterval      _nextTick;
     BOOL                _fullscreen;
     BOOL                _hiddenHUD;
     BOOL                _fitMode;
@@ -118,6 +118,7 @@ static NSMutableDictionary * gHistory;
         
 #ifdef DEBUG
     UILabel             *_messageLabel;
+    NSTimeInterval      _debugStartTime;
 #endif
 
     CGFloat             _decodeDuration;
@@ -159,7 +160,6 @@ static NSMutableDictionary * gHistory;
     if (self) {
         
         _moviePosition = 0;
-        _startTime = -1;
         self.wantsFullScreenLayout = YES;
         
         _decodeDuration = DEFAULT_DECODE_DURATION;
@@ -519,33 +519,40 @@ static NSMutableDictionary * gHistory;
         
         return;
     }
-        
+
     self.playing = YES;
-    _startTime = -1;
+
     _disableUpdateHUD = NO;
-    
-    [self decodeFrames];
+    _nextTick = 0;
+
+#ifdef DEBUG
+    _debugStartTime = [NSDate timeIntervalSinceReferenceDate];
+#endif
+
     [self scheduleDecodeFrames];
     [self updatePlayButton];
-    
+
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, 0.01 * NSEC_PER_SEC);
     dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
         [self tick];
     });
-        
-    NSLog(@"movie play");    
+
+    if (_decoder.validAudio)
+        [self enableAudio:YES];
+
+    NSLog(@"play movie");    
 }
 
 - (void) pause
 {
     if (!self.playing)
         return;
-        
+
     self.playing = NO;
    // [_decoder pause];
     [self enableAudio:NO];
     [self updatePlayButton];
-    NSLog(@"movie pause");
+    NSLog(@"pause movie");
 }
 
 - (void) setMoviePosition: (CGFloat) position
@@ -561,17 +568,6 @@ static NSMutableDictionary * gHistory;
 
         [self updatePosition:position playMode:playMode];
     });
-    
-    /*
-    [self->isa cancelPreviousPerformRequestsWithTarget:self
-                                              selector:@selector(updatePosition:)
-                                                object:nil];
-     
-    
-    [self performSelector:@selector(updatePosition:)
-               withObject:[NSNumber numberWithFloat:position]
-               afterDelay:0.1];
-   */
 }
 
 #pragma mark - actions
@@ -1006,9 +1002,11 @@ static NSMutableDictionary * gHistory;
         [self scheduleDecodeFrames];
     }
     
-    NSTimeInterval destTime = _startTime + _moviePosition + interval;
-    NSTimeInterval diffTime = destTime - [NSDate timeIntervalSinceReferenceDate];
-    diffTime = MAX(diffTime, 0.02);
+    const NSTimeInterval now = [NSDate timeIntervalSinceReferenceDate];
+    const NSTimeInterval delta = (_nextTick > 0) ? _nextTick - now : 0;
+    const NSTimeInterval diffTime = MAX(interval + delta, 0.02);
+    _nextTick = now + diffTime;
+    
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, diffTime * NSEC_PER_SEC);
     dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
         [self tick];
@@ -1047,14 +1045,6 @@ static NSMutableDictionary * gHistory;
             _imageView.image = [self.artworkFrame asImage];
             self.artworkFrame = nil;
         }
-    }
-    
-    if (self.playing && _startTime < 0) {
-        
-        if (_decoder.validAudio)
-            [self enableAudio:YES];
-        
-        _startTime = [NSDate timeIntervalSinceReferenceDate] - _moviePosition;
     }
     
     return interval;
@@ -1097,16 +1087,15 @@ static NSMutableDictionary * gHistory;
     
     if (_decoder.duration != MAXFLOAT)
         _leftLabel.text = formatTimeInterval(duration - position, YES);
-    
             
 #ifdef DEBUG
-    const NSTimeInterval durationSinceStart = [NSDate timeIntervalSinceReferenceDate] - _startTime;
-    _messageLabel.text = [NSString stringWithFormat:@"%d %d %d - %@%@ %@\n%@",
+    const NSTimeInterval timeSinceStart = [NSDate timeIntervalSinceReferenceDate] - _debugStartTime;
+    _messageLabel.text = [NSString stringWithFormat:@"%d %d %d - %@ %@\n%@",
                           _videoFrames.count,
                           _audioFrames.count,
                           _scheduledDecode,
-                          formatTimeInterval(durationSinceStart, NO),
-                          durationSinceStart > _moviePosition + 0.5 ? @" (lags)" : @"",
+                          formatTimeInterval(timeSinceStart, NO),
+                          //timeSinceStart > _moviePosition + 0.5 ? @" (lags)" : @"",
                           _decoder.isEOF ? @"- END" : @"",
                           _buffered ? [NSString stringWithFormat:@"buffering %.1f%%", _bufferedDuration / _minBufferedDuration * 100] : @""];
 #endif
@@ -1149,34 +1138,34 @@ static NSMutableDictionary * gHistory;
     @synchronized(_videoFrames) {
         [_videoFrames removeAllObjects];
     }
-    
+
     @synchronized(_audioFrames) {
         
         [_audioFrames removeAllObjects];
         _currentAudioFrame = nil;
     }
-    
+
     _bufferedDuration = 0;
-    
+
     position = MIN(_decoder.duration - 1, MAX(0, position));
-    
+
     @synchronized (_decoder) {
         _decoder.position = position;
         _moviePosition = _decoder.position;
     }
-    
+
     if (playMode) {
-        
+
         [self play];
-        
+
     } else {
-        
+
         [self decodeFrames];
         [self presentFrame];
         _disableUpdateHUD = NO;
         [self updateHUD];
     }
-    
+
     NSLog(@"movie.position = %.1f", position);
 }
 
