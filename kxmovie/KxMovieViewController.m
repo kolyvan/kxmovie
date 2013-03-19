@@ -95,6 +95,7 @@ static NSMutableDictionary * gHistory;
     BOOL                _fitMode;
     BOOL                _infoMode;
     BOOL                _restoreIdleTimer;
+    BOOL                _interrupted;
 
     KxMovieGLView       *_glView;
     UIImageView         *_imageView;
@@ -167,14 +168,19 @@ static NSMutableDictionary * gHistory;
         
         __weak KxMovieViewController *weakSelf = self;
         
+        KxMovieDecoder *decoder = [[KxMovieDecoder alloc] init];
+        
+        decoder.interruptCallback = ^BOOL(){
+            
+            __strong KxMovieViewController *strongSelf = weakSelf;
+            return strongSelf ? [strongSelf interruptDecoder] : YES;
+        };
+        
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
     
-            NSError *error;
-            KxMovieDecoder *decoder;
-            decoder = [KxMovieDecoder movieDecoderWithContentPath:path error:&error];
-            
-            NSLog(@"movie loaded");
-            
+            NSError *error = nil;
+            [decoder openFile:path error:&error];
+                        
             __strong KxMovieViewController *strongSelf = weakSelf;
             if (strongSelf) {
                 
@@ -190,8 +196,6 @@ static NSMutableDictionary * gHistory;
 
 - (void) dealloc
 {
-    // NSLog(@"%@ dealloc", self);
-    
     [self pause];
     
     [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -200,6 +204,8 @@ static NSMutableDictionary * gHistory;
         dispatch_release(_dispatchQueue);
         _dispatchQueue = NULL;
     }
+    
+    NSLog(@"%@ dealloc", self);
 }
 
 - (void)loadView
@@ -381,12 +387,6 @@ static NSMutableDictionary * gHistory;
     }
 }
 
-- (void)viewDidLoad
-{
-    [super viewDidLoad];
-    // [self setupUserInteraction];
-}
-
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
@@ -405,7 +405,9 @@ static NSMutableDictionary * gHistory;
             
         } else {
             
-            [_decoder reopenWithPath:nil error:nil]; // free all
+            // force ffmpeg to free allocated memory
+            [_decoder closeFile];
+            [_decoder openFile:nil error:nil];
             
             [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Failure", nil)
                                         message:NSLocalizedString(@"Out of memory", nil)
@@ -417,7 +419,8 @@ static NSMutableDictionary * gHistory;
     } else {
         
         [self freeBufferedFrames];
-        [_decoder reopenWithPath:nil error:nil]; // free all
+        [_decoder closeFile];
+        [_decoder openFile:nil error:nil];
     }
 }
 
@@ -479,6 +482,9 @@ static NSMutableDictionary * gHistory;
     
     [_activityIndicatorView stopAnimating];
     _buffered = NO;
+    _interrupted = YES;
+    
+    NSLog(@"viewWillDisappear %@", self);
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
@@ -548,7 +554,8 @@ static NSMutableDictionary * gHistory;
     }
 
     self.playing = YES;
-
+    _interrupted = NO;
+    
     _disableUpdateHUD = NO;
     _nextTick = 0;
 
@@ -576,7 +583,7 @@ static NSMutableDictionary * gHistory;
         return;
 
     self.playing = NO;
-   // [_decoder pause];
+    //_interrupted = YES;
     [self enableAudio:NO];
     [self updatePlayButton];
     NSLog(@"pause movie");
@@ -1186,7 +1193,7 @@ static NSMutableDictionary * gHistory;
             });
             
         } else {
-            
+
             [self decodeFrames];
             
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -1405,6 +1412,13 @@ static NSMutableDictionary * gHistory;
     
      cell.selectionStyle = UITableViewCellSelectionStyleNone;
     return cell;
+}
+
+- (BOOL) interruptDecoder
+{
+    if (!_decoder)
+        return NO;
+    return _interrupted;
 }
 
 #pragma mark - Table view delegate

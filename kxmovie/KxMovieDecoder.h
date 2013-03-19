@@ -76,6 +76,8 @@ typedef enum {
 - (UIImage *) asImage;
 @end
 
+typedef BOOL(^KxMovieDecoderInterruptCallback)();
+
 @interface KxMovieDecoder : NSObject
 
 @property (readonly, nonatomic, strong) NSString *path;
@@ -95,14 +97,18 @@ typedef enum {
 @property (readonly, nonatomic) BOOL isNetwork;
 @property (readonly, nonatomic) CGFloat startTime;
 @property (readwrite, nonatomic) BOOL disableDeinterlacing;
+@property (readwrite, nonatomic, strong) KxMovieDecoderInterruptCallback interruptCallback;
 
 + (id) movieDecoderWithContentPath: (NSString *) path
                              error: (NSError **) perror;
 
+- (BOOL) openFile: (NSString *) path
+            error: (NSError **) perror;
+
+-(void) closeFile;
+
 - (BOOL) setupVideoFrameFormat: (KxVideoFrameFormat) format;
 
 - (NSArray *) decodeFrames: (CGFloat) minDuration;
-
-- (BOOL) reopenWithPath: (NSString *) path error: (NSError **) perror;
 
 @end
