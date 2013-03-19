@@ -390,6 +390,35 @@ static NSMutableDictionary * gHistory;
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
+    
+    if (self.playing) {
+        
+        [self pause];
+        [self freeBufferedFrames];
+        
+        if (_maxBufferedDuration > 0) {
+            
+            _minBufferedDuration = _maxBufferedDuration = 0;
+            [self play];
+            
+            NSLog(@"didReceiveMemoryWarning, disable buffering and continue playing");
+            
+        } else {
+            
+            [_decoder reopenWithPath:nil error:nil]; // free all
+            
+            [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Failure", nil)
+                                        message:NSLocalizedString(@"Out of memory", nil)
+                                       delegate:nil
+                              cancelButtonTitle:NSLocalizedString(@"Close", nil)
+                              otherButtonTitles:nil] show];
+        }
+        
+    } else {
+        
+        [self freeBufferedFrames];
+        [_decoder reopenWithPath:nil error:nil]; // free all
+    }
 }
 
 - (void) viewDidAppear:(BOOL)animated
