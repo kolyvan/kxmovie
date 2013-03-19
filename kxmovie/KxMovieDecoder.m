@@ -1179,7 +1179,7 @@ static BOOL isNetworkPath (NSString *path)
                             finished = YES;
                     }
                 }
-                
+                                
                 if (0 == len)
                     break;
                 
@@ -1240,6 +1240,13 @@ static BOOL isNetworkPath (NSString *path)
 	}
     
     return result;
+}
+
+- (BOOL) reopenWithPath: (NSString *) path
+                  error: (NSError **) perror
+{
+    [self closeFile];
+    return [self openFile:(path ? path : _path) error:perror];
 }
 
 @end

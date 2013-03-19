@@ -103,4 +103,6 @@ typedef enum {
 
 - (NSArray *) decodeFrames: (CGFloat) minDuration;
 
+- (BOOL) reopenWithPath: (NSString *) path error: (NSError **) perror;
+
 @end
