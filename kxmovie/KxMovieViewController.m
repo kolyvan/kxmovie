@@ -1004,7 +1004,7 @@ static NSMutableDictionary * gHistory;
 
 - (void) tick
 {
-    if (_buffered && _bufferedDuration > _minBufferedDuration) {
+    if (_buffered && ((_bufferedDuration > _minBufferedDuration) || _decoder.isEOF)) {
         
         _buffered = NO;
         [_activityIndicatorView stopAnimating];        
