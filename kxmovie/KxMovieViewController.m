@@ -808,7 +808,7 @@ static NSMutableDictionary * gHistory;
         _subtitlesLabel.opaque = NO;
         _subtitlesLabel.adjustsFontSizeToFitWidth = NO;
         _subtitlesLabel.textAlignment = UITextAlignmentCenter;
-        _messageLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+        _subtitlesLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
         _subtitlesLabel.textColor = [UIColor whiteColor];
         _subtitlesLabel.font = [UIFont systemFontOfSize:16];
         _subtitlesLabel.hidden = YES;
