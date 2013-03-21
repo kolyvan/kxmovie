@@ -30,6 +30,7 @@
         
         _remoteMovies = @[
 
+            @"http://eric.cast.ro/stream2.flv",
             @"http://liveipad.wasu.cn/cctv2_ipad/z.m3u8",                          
             @"http://www.wowza.com/_h264/BigBuckBunny_175k.mov",
             // @"http://www.wowza.com/_h264/BigBuckBunny_115k.mov",

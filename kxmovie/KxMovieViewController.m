@@ -474,7 +474,7 @@ static NSMutableDictionary * gHistory;
         
         if (_moviePosition == 0 || _decoder.isEOF)
             [gHistory removeObjectForKey:_decoder.path];
-        else
+        else if (!_decoder.isNetwork)
             [gHistory setValue:[NSNumber numberWithFloat:_moviePosition]
                         forKey:_decoder.path];
     }
