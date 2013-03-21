@@ -90,7 +90,9 @@ static NSMutableDictionary * gHistory;
     NSUInteger          _currentAudioFramePos;
     CGFloat             _moviePosition;
     BOOL                _disableUpdateHUD;
-    NSTimeInterval      _nextTick;
+    NSTimeInterval      _tickCorrectionTime;
+    NSTimeInterval      _tickCorrectionPosition;
+    NSUInteger          _tickCounter;
     BOOL                _fullscreen;
     BOOL                _hiddenHUD;
     BOOL                _fitMode;
@@ -559,12 +561,12 @@ static NSMutableDictionary * gHistory;
 
     self.playing = YES;
     _interrupted = NO;
-    
     _disableUpdateHUD = NO;
-    _nextTick = 0;
+    _tickCorrectionTime = 0;
+    _tickCounter = 0;
 
 #ifdef DEBUG
-    _debugStartTime = [NSDate timeIntervalSinceReferenceDate];
+    _debugStartTime = -1;
 #endif
 
     [self asyncDecodeFrames];
@@ -876,7 +878,7 @@ static NSMutableDictionary * gHistory;
                                 
                                 memset(outData, 0, numFrames * numChannels * sizeof(float));
 #ifdef DEBUG
-                                //NSLog(@"desync audio (outrun) wait %.4f %.4f", _moviePosition, frame.position);
+                                NSLog(@"desync audio (outrun) wait %.4f %.4f", _moviePosition, frame.position);
                                 _debugAudioStatus = 1;
                                 _debugAudioStatusTS = [NSDate date];
 #endif
@@ -888,7 +890,7 @@ static NSMutableDictionary * gHistory;
                             if (delta > 2.0 && count > 1) {
                                 
 #ifdef DEBUG
-                                //NSLog(@"desync audio (lags) skip %.4f %.4f", _moviePosition, frame.position);
+                                NSLog(@"desync audio (lags) skip %.4f %.4f", _moviePosition, frame.position);
                                 _debugAudioStatus = 2;
                                 _debugAudioStatusTS = [NSDate date];
 #endif
@@ -1054,6 +1056,7 @@ static NSMutableDictionary * gHistory;
 {
     if (_buffered && ((_bufferedDuration > _minBufferedDuration) || _decoder.isEOF)) {
         
+        _tickCorrectionTime = 0;
         _buffered = NO;
         [_activityIndicatorView stopAnimating];        
     }
@@ -1078,7 +1081,7 @@ static NSMutableDictionary * gHistory;
             }
             
             if (_minBufferedDuration > 0 && !_buffered) {
-                
+                                
                 _buffered = YES;
                 [_activityIndicatorView startAnimating];
             }
@@ -1090,18 +1093,48 @@ static NSMutableDictionary * gHistory;
             [self asyncDecodeFrames];
         }
         
-        const NSTimeInterval now = [NSDate timeIntervalSinceReferenceDate];
-        const NSTimeInterval delta = (_nextTick > 0) ? _nextTick - now : 0;
-        const NSTimeInterval diffTime = MAX(interval + delta, 0.02);
-        _nextTick = now + diffTime;
-        
-        dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, diffTime * NSEC_PER_SEC);
+        const NSTimeInterval correction = [self tickCorrection];
+        const NSTimeInterval time = MAX(interval + correction, 0.01);
+        dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, time * NSEC_PER_SEC);
         dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
             [self tick];
         });
     }
+    
+    if ((_tickCounter++ % 3) == 0) {
+        [self updateHUD];
+    }
+}
+
+- (CGFloat) tickCorrection
+{
+    if (_buffered)
+        return 0;
+    
+    const NSTimeInterval now = [NSDate timeIntervalSinceReferenceDate];
+    
+    if (!_tickCorrectionTime) {
         
-    [self updateHUD];
+        _tickCorrectionTime = now;
+        _tickCorrectionPosition = _moviePosition;
+        return 0;
+    }
+    
+    NSTimeInterval dPosition = _moviePosition - _tickCorrectionPosition;
+    NSTimeInterval dTime = now - _tickCorrectionTime;
+    NSTimeInterval correction = dPosition - dTime;
+    
+    //if ((_tickCounter % 200) == 0)
+    //    NSLog(@"tick correction %.4f", correction);
+    
+    if (correction > 1.f || correction < -1.f) {
+        
+        NSLog(@"tick correction reset %.2f", correction);
+        correction = 0;
+        _tickCorrectionTime = 0;
+    }
+    
+    return correction;
 }
 
 - (CGFloat) presentFrame
@@ -1138,6 +1171,11 @@ static NSMutableDictionary * gHistory;
 
     if (_decoder.validSubtitles)
         [self presentSubtitles];
+    
+#ifdef DEBUG
+    if (self.playing && _debugStartTime < 0)
+        _debugStartTime = [NSDate timeIntervalSinceReferenceDate] - _moviePosition;
+#endif
 
     return interval;
 }
