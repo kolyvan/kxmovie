@@ -25,6 +25,7 @@ typedef enum {
     kxMovieErrorAllocateFrame,
     kxMovieErroSetupScaler,
     kxMovieErroReSampler,
+    kxMovieErroUnsupported,
     
 } kxMovieError;
 
@@ -33,6 +34,7 @@ typedef enum {
     KxMovieFrameTypeAudio,
     KxMovieFrameTypeVideo,
     KxMovieFrameTypeArtwork,
+    KxMovieFrameTypeSubtitle,
     
 } KxMovieFrameType;
 
@@ -76,6 +78,10 @@ typedef enum {
 - (UIImage *) asImage;
 @end
 
+@interface KxSubtitleFrame : KxMovieFrame
+@property (readonly, nonatomic, strong) NSString *text;
+@end
+
 typedef BOOL(^KxMovieDecoderInterruptCallback)();
 
 @interface KxMovieDecoder : NSObject
@@ -90,8 +96,11 @@ typedef BOOL(^KxMovieDecoderInterruptCallback)();
 @property (readonly, nonatomic) NSUInteger frameHeight;
 @property (readonly, nonatomic) NSUInteger audioStreamsCount;
 @property (readwrite,nonatomic) NSInteger selectedAudioStream;
+@property (readonly, nonatomic) NSUInteger subtitleStreamsCount;
+@property (readwrite,nonatomic) NSInteger selectedSubtitleStream;
 @property (readonly, nonatomic) BOOL validVideo;
 @property (readonly, nonatomic) BOOL validAudio;
+@property (readonly, nonatomic) BOOL validSubtitles;
 @property (readonly, nonatomic, strong) NSDictionary *info;
 @property (readonly, nonatomic, strong) NSString *videoStreamFormatName;
 @property (readonly, nonatomic) BOOL isNetwork;
@@ -110,5 +119,14 @@ typedef BOOL(^KxMovieDecoderInterruptCallback)();
 - (BOOL) setupVideoFrameFormat: (KxVideoFrameFormat) format;
 
 - (NSArray *) decodeFrames: (CGFloat) minDuration;
+
+@end
+
+@interface KxMovieSubtitleASSParser : NSObject
+
++ (NSArray *) parseEvents: (NSString *) events;
++ (NSArray *) parseDialogue: (NSString *) dialogue
+                  numFields: (NSUInteger) numFields;
++ (NSString *) removeCommandsFromEventText: (NSString *) text;
 
 @end

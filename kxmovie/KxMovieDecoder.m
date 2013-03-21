@@ -67,6 +67,9 @@ static NSString * errorMessage (kxMovieError errorCode)
             
         case kxMovieErroReSampler:
             return NSLocalizedString(@"Unable to setup resampler", nil);
+            
+        case kxMovieErroUnsupported:
+            return NSLocalizedString(@"The ability is not supported", nil);
     }
 }
 
@@ -380,6 +383,14 @@ static int interrupt_callback(void *ctx);
 }
 @end
 
+@interface KxSubtitleFrame()
+@property (readwrite, nonatomic, strong) NSString *text;
+@end
+
+@implementation KxSubtitleFrame
+- (KxMovieFrameType) type { return KxMovieFrameTypeSubtitle; }
+@end
+
 ////////////////////////////////////////////////////////////////////////////////
 
 @interface KxMovieDecoder () {
@@ -387,10 +398,12 @@ static int interrupt_callback(void *ctx);
     AVFormatContext     *_formatCtx;
 	AVCodecContext      *_videoCodecCtx;
     AVCodecContext      *_audioCodecCtx;
+    AVCodecContext      *_subtitleCodecCtx;
     AVFrame             *_videoFrame;
     AVFrame             *_audioFrame;
     NSInteger           _videoStream;
     NSInteger           _audioStream;
+    NSInteger           _subtitleStream;
 	AVPicture           _picture;
     BOOL                _pictureValid;
     struct SwsContext   *_swsContext;
@@ -399,12 +412,14 @@ static int interrupt_callback(void *ctx);
     CGFloat             _position;
     NSArray             *_videoStreams;
     NSArray             *_audioStreams;
+    NSArray             *_subtitleStreams;
     SwrContext          *_swrContext;
     void                *_swrBuffer;
     NSUInteger          _swrBufferSize;
     NSDictionary        *_info;
     KxVideoFrameFormat  _videoFrameFormat;
     NSUInteger          _artworkStream;
+    NSInteger           _subtitleASSEvents;
 }
 @end
 
@@ -416,9 +431,12 @@ static int interrupt_callback(void *ctx);
 @dynamic frameHeight;
 @dynamic sampleRate;
 @dynamic audioStreamsCount;
+@dynamic subtitleStreamsCount;
 @dynamic selectedAudioStream;
+@dynamic selectedSubtitleStream;
 @dynamic validAudio;
 @dynamic validVideo;
+@dynamic validSubtitles;
 @dynamic info;
 @dynamic videoStreamFormatName;
 @dynamic startTime;
@@ -475,6 +493,11 @@ static int interrupt_callback(void *ctx);
     return [_audioStreams count];
 }
 
+- (NSUInteger) subtitleStreamsCount
+{
+    return [_subtitleStreams count];
+}
+
 - (NSInteger) selectedAudioStream
 {
     if (_audioStream == -1)
@@ -493,6 +516,31 @@ static int interrupt_callback(void *ctx);
     }
 }
 
+- (NSInteger) selectedSubtitleStream
+{
+    if (_subtitleStream == -1)
+        return -1;
+    return [_subtitleStreams indexOfObject:@(_subtitleStream)];
+}
+
+- (void) setSelectedSubtitleStream:(NSInteger)selected
+{
+    [self closeSubtitleStream];
+    
+    if (selected == -1) {
+        
+        _subtitleStream = -1;
+        
+    } else {
+        
+        NSInteger subtitleStream = [_subtitleStreams[selected] integerValue];
+        kxMovieError errCode = [self openSubtitleStream:subtitleStream];
+        if (kxMovieErrorNone != errCode) {
+            NSLog(@"%@", errorMessage(errCode));
+        }
+    }
+}
+
 - (BOOL) validAudio
 {
     return _audioStream != -1;
@@ -501,6 +549,11 @@ static int interrupt_callback(void *ctx);
 - (BOOL) validVideo
 {
     return _videoStream != -1;
+}
+
+- (BOOL) validSubtitles
+{
+    return _subtitleStream != -1;
 }
 
 - (NSDictionary *) info
@@ -537,27 +590,62 @@ static int interrupt_callback(void *ctx);
         
             char buf[256];
             
-            NSMutableArray *ma = [NSMutableArray array];
-            for (NSNumber *n in _videoStreams) {
-                AVStream *st = _formatCtx->streams[n.integerValue];
-                avcodec_string(buf, sizeof(buf), st->codec, 1);
-                NSString *s = [NSString stringWithCString:buf encoding:NSUTF8StringEncoding];
-                if ([s hasPrefix:@"Video: "])
-                    s = [s substringFromIndex:7];
-                [ma addObject:s];
+            if (_videoStreams.count) {
+                NSMutableArray *ma = [NSMutableArray array];
+                for (NSNumber *n in _videoStreams) {
+                    AVStream *st = _formatCtx->streams[n.integerValue];
+                    avcodec_string(buf, sizeof(buf), st->codec, 1);
+                    NSString *s = [NSString stringWithCString:buf encoding:NSUTF8StringEncoding];
+                    if ([s hasPrefix:@"Video: "])
+                        s = [s substringFromIndex:@"Video: ".length];
+                    [ma addObject:s];
+                }
+                md[@"video"] = ma.copy;
             }
-            [md setValue: [ma copy] forKey: @"video"];
             
-            [ma removeAllObjects];
-            for (NSNumber *n in _audioStreams) {
-                AVStream *st = _formatCtx->streams[n.integerValue];
-                avcodec_string(buf, sizeof(buf), st->codec, 1);
-                NSString *s = [NSString stringWithCString:buf encoding:NSUTF8StringEncoding];
-                if ([s hasPrefix:@"Audio: "])
-                    s = [s substringFromIndex:7];                
-                [ma addObject:s];
+            if (_audioStreams.count) {
+                NSMutableArray *ma = [NSMutableArray array];
+                for (NSNumber *n in _audioStreams) {
+                    AVStream *st = _formatCtx->streams[n.integerValue];
+                    
+                    NSMutableString *ms = [NSMutableString string];
+                    AVDictionaryEntry *lang = av_dict_get(st->metadata, "language", NULL, 0);
+                    if (lang && lang->value) {
+                        [ms appendFormat:@"%s ", lang->value];
+                    }
+                    
+                    avcodec_string(buf, sizeof(buf), st->codec, 1);
+                    NSString *s = [NSString stringWithCString:buf encoding:NSUTF8StringEncoding];
+                    if ([s hasPrefix:@"Audio: "])
+                        s = [s substringFromIndex:@"Audio: ".length];
+                    [ms appendString:s];
+                    
+                    [ma addObject:ms.copy];
+                }                
+                md[@"audio"] = ma.copy;
             }
-            [md setValue: [ma copy] forKey: @"audio"];
+            
+            if (_subtitleStreams.count) {
+                NSMutableArray *ma = [NSMutableArray array];
+                for (NSNumber *n in _subtitleStreams) {
+                    AVStream *st = _formatCtx->streams[n.integerValue];
+                    
+                    NSMutableString *ms = [NSMutableString string];
+                    AVDictionaryEntry *lang = av_dict_get(st->metadata, "language", NULL, 0);
+                    if (lang && lang->value) {
+                        [ms appendFormat:@"%s ", lang->value];
+                    }
+                    
+                    avcodec_string(buf, sizeof(buf), st->codec, 1);
+                    NSString *s = [NSString stringWithCString:buf encoding:NSUTF8StringEncoding];
+                    if ([s hasPrefix:@"Subtitle: "])
+                        s = [s substringFromIndex:@"Subtitle: ".length];
+                    [ms appendString:s];
+                    
+                    [ma addObject:ms.copy];
+                }               
+                md[@"subtitles"] = ma.copy;
+            }
             
         }
                 
@@ -647,10 +735,16 @@ static int interrupt_callback(void *ctx);
         kxMovieError videoErr = [self openVideoStream];
         kxMovieError audioErr = [self openAudioStream];
         
+        _subtitleStream = -1;
+        
         if (videoErr != kxMovieErrorNone &&
             audioErr != kxMovieErrorNone) {
          
             errCode = videoErr; // both fails
+            
+        } else {
+            
+            _subtitleStreams = collectStreams(_formatCtx, AVMEDIA_TYPE_SUBTITLE);
         }
     }
     
@@ -663,7 +757,7 @@ static int interrupt_callback(void *ctx);
             *perror = kxmovieError(errCode, errMsg);
         return NO;
     }
-    
+        
     return YES;
 }
 
@@ -846,13 +940,61 @@ static int interrupt_callback(void *ctx);
     return kxMovieErrorNone; 
 }
 
+- (kxMovieError) openSubtitleStream: (NSInteger) subtitleStream
+{
+    AVCodecContext *codecCtx = _formatCtx->streams[subtitleStream]->codec;
+    
+    AVCodec *codec = avcodec_find_decoder(codecCtx->codec_id);
+    if(!codec)
+        return kxMovieErrorCodecNotFound;
+    
+    const AVCodecDescriptor *codecDesc = avcodec_descriptor_get(codecCtx->codec_id);
+    if (codecDesc && (codecDesc->props & AV_CODEC_PROP_BITMAP_SUB)) {
+        // Only text based subtitles supported
+        return kxMovieErroUnsupported;
+    }
+    
+    if (avcodec_open2(codecCtx, codec, NULL) < 0)
+        return kxMovieErrorOpenCodec;
+    
+    _subtitleStream = subtitleStream;
+    _subtitleCodecCtx = codecCtx;
+    
+    NSLog(@"subtitle codec: '%s' mode: %d enc: %s",
+          codecDesc->name,
+          codecCtx->sub_charenc_mode,
+          codecCtx->sub_charenc);
+    
+    _subtitleASSEvents = -1;
+    
+    if (codecCtx->subtitle_header_size) {
+                
+        NSString *s = [[NSString alloc] initWithBytes:codecCtx->subtitle_header
+                                               length:codecCtx->subtitle_header_size
+                                             encoding:NSASCIIStringEncoding];
+        
+        if (s.length) {
+            
+            NSArray *fields = [KxMovieSubtitleASSParser parseEvents:s];
+            if (fields.count && [fields.lastObject isEqualToString:@"Text"]) {
+                _subtitleASSEvents = fields.count;
+                NSLog(@"subtitle ass events: %@", [fields componentsJoinedByString:@","]);
+            }
+        }
+    }
+    
+    return kxMovieErrorNone;
+}
+
 -(void) closeFile
-{   
+{
     [self closeAudioStream];
     [self closeVideoStream];
+    [self closeSubtitleStream];
     
     _videoStreams = nil;
     _audioStreams = nil;
+    _subtitleStreams = nil;
     
     if (_formatCtx) {
         
@@ -910,6 +1052,17 @@ static int interrupt_callback(void *ctx);
         
         avcodec_close(_audioCodecCtx);
         _audioCodecCtx = NULL;
+    }
+}
+
+- (void) closeSubtitleStream
+{
+    _subtitleStream = -1;
+    
+    if (_subtitleCodecCtx) {
+        
+        avcodec_close(_subtitleCodecCtx);
+        _subtitleCodecCtx = NULL;
     }
 }
 
@@ -1123,6 +1276,54 @@ static int interrupt_callback(void *ctx);
     return frame;
 }
 
+- (KxSubtitleFrame *) handleSubtitle: (AVSubtitle *)pSubtitle
+{
+    NSMutableString *ms = [NSMutableString string];
+    
+    for (NSUInteger i = 0; i < pSubtitle->num_rects; ++i) {
+       
+        AVSubtitleRect *rect = pSubtitle->rects[i];
+        if (rect) {
+            
+            if (rect->text) { // rect->type == SUBTITLE_TEXT
+                
+                NSString *s = [NSString stringWithUTF8String:rect->text];
+                if (s.length) [ms appendString:s];
+                
+            } else if (rect->ass && _subtitleASSEvents != -1) {
+                
+                NSString *s = [NSString stringWithUTF8String:rect->ass];
+                if (s.length) {
+                    
+                    NSArray *fields = [KxMovieSubtitleASSParser parseDialogue:s numFields:_subtitleASSEvents];
+                    if (fields.count && [fields.lastObject length]) {
+                        
+                        s = [KxMovieSubtitleASSParser removeCommandsFromEventText: fields.lastObject];
+                        if (s.length) [ms appendString:s];
+                    }                    
+                }
+            }
+        }
+    }
+    
+    if (!ms.length)
+        return nil;
+    
+    KxSubtitleFrame *frame = [[KxSubtitleFrame alloc] init];
+    frame.text = [ms copy];   
+    frame.position = pSubtitle->pts / AV_TIME_BASE + pSubtitle->start_display_time;
+    frame.duration = (CGFloat)(pSubtitle->end_display_time - pSubtitle->start_display_time) / 1000.f;
+    
+#if 0
+    NSLog(@"SUB: %.4f %.4f | %@",
+          frame.position,
+          frame.duration,
+          frame.text);
+#endif
+    
+    return frame;    
+}
+
 - (BOOL) interruptDecoder
 {
     if (_interruptCallback)
@@ -1133,7 +1334,7 @@ static int interrupt_callback(void *ctx);
 #pragma mark - public
 
 - (BOOL) setupVideoFrameFormat: (KxVideoFrameFormat) format
-{  
+{
     if (format == KxVideoFrameFormatYUV &&
         _videoCodecCtx &&
         (_videoCodecCtx->pix_fmt == AV_PIX_FMT_YUV420P || _videoCodecCtx->pix_fmt == AV_PIX_FMT_YUVJ420P)) {
@@ -1262,11 +1463,44 @@ static int interrupt_callback(void *ctx);
                 frame.picture = [NSData dataWithBytes:packet.data length:packet.size];
                 [result addObject:frame];
             }
+            
+        } else if (packet.stream_index == _subtitleStream) {
+            
+            int pktSize = packet.size;
+            
+            while (pktSize > 0) {
+                
+                AVSubtitle subtitle;
+                int gotsubtitle = 0;
+                int len = avcodec_decode_subtitle2(_subtitleCodecCtx,
+                                                  &subtitle,
+                                                  &gotsubtitle,
+                                                  &packet);
+                
+                if (len < 0) {
+                    NSLog(@"decode subtitle error, skip packet");
+                    break;
+                }
+                
+                if (gotsubtitle) {
+                    
+                    KxSubtitleFrame *frame = [self handleSubtitle: &subtitle];
+                    if (frame) {
+                        [result addObject:frame];
+                    }
+                    avsubtitle_free(&subtitle);
+                }
+                
+                if (0 == len)
+                    break;
+                
+                pktSize -= len;
+            }
         }
 
         av_free_packet(&packet);
 	}
-    
+
     return result;
 }
 
@@ -1284,3 +1518,102 @@ static int interrupt_callback(void *ctx)
     if (r) NSLog(@"DEBUG: INTERRUPT_CALLBACK!");
     return r;
 }
+
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
+@implementation KxMovieSubtitleASSParser
+
++ (NSArray *) parseEvents: (NSString *) events
+{
+    NSRange r = [events rangeOfString:@"[Events]"];
+    if (r.location != NSNotFound) {
+        
+        NSUInteger pos = r.location + r.length;
+        
+        r = [events rangeOfString:@"Format:"
+                          options:0
+                            range:NSMakeRange(pos, events.length - pos)];
+        
+        if (r.location != NSNotFound) {
+            
+            pos = r.location + r.length;
+            r = [events rangeOfCharacterFromSet:[NSCharacterSet newlineCharacterSet]
+                                        options:0
+                                          range:NSMakeRange(pos, events.length - pos)];
+            
+            if (r.location != NSNotFound) {
+                
+                NSString *format = [events substringWithRange:NSMakeRange(pos, r.location - pos)];
+                NSArray *fields = [format componentsSeparatedByString:@","];
+                if (fields.count > 0) {
+                    
+                    NSCharacterSet *ws = [NSCharacterSet whitespaceCharacterSet];
+                    NSMutableArray *ma = [NSMutableArray array];
+                    for (NSString *s in fields) {
+                        [ma addObject:[s stringByTrimmingCharactersInSet:ws]];
+                    }
+                    return ma;
+                }
+            }
+        }
+    }
+    
+    return nil;
+}
+
++ (NSArray *) parseDialogue: (NSString *) dialogue
+                  numFields: (NSUInteger) numFields
+{
+    if ([dialogue hasPrefix:@"Dialogue:"]) {
+        
+        NSMutableArray *ma = [NSMutableArray array];
+        
+        NSRange r = {@"Dialogue:".length, 0};
+        NSUInteger n = 0;
+        
+        while (r.location != NSNotFound && n++ < numFields) {
+            
+            const NSUInteger pos = r.location + r.length;
+            
+            r = [dialogue rangeOfString:@","
+                                options:0
+                                  range:NSMakeRange(pos, dialogue.length - pos)];
+            
+            const NSUInteger len = r.location == NSNotFound ? dialogue.length - pos : r.location - pos;
+            NSString *p = [dialogue substringWithRange:NSMakeRange(pos, len)];
+            p = [p stringByReplacingOccurrencesOfString:@"\\N" withString:@"\n"];
+            [ma addObject: p];
+        }
+        
+        return ma;
+    }
+    
+    return nil;
+}
+
++ (NSString *) removeCommandsFromEventText: (NSString *) text
+{
+    NSMutableString *ms = [NSMutableString string];
+    
+    NSScanner *scanner = [NSScanner scannerWithString:text];
+    while (!scanner.isAtEnd) {
+        
+        NSString *s;
+        if ([scanner scanUpToString:@"{\\" intoString:&s]) {
+            
+            [ms appendString:s];
+        }
+        
+        if (!([scanner scanString:@"{\\" intoString:nil] &&
+              [scanner scanUpToString:@"}" intoString:nil] &&
+              [scanner scanString:@"}" intoString:nil])) {
+            
+            break;
+        }
+    }
+    
+    return ms;
+}
+
+@end

@@ -58,6 +58,7 @@ enum {
     KxMovieInfoSectionGeneral,
     KxMovieInfoSectionVideo,
     KxMovieInfoSectionAudio,
+    KxMovieInfoSectionSubtitles,
     KxMovieInfoSectionMetadata,    
     KxMovieInfoSectionCount,
 };
@@ -84,11 +85,11 @@ static NSMutableDictionary * gHistory;
     dispatch_queue_t    _dispatchQueue;
     NSMutableArray      *_videoFrames;
     NSMutableArray      *_audioFrames;
+    NSMutableArray      *_subtitles;
     NSData              *_currentAudioFrame;
     NSUInteger          _currentAudioFramePos;
     CGFloat             _moviePosition;
     BOOL                _disableUpdateHUD;
-    NSLock              *_scheduledLock;
     NSTimeInterval      _nextTick;
     BOOL                _fullscreen;
     BOOL                _hiddenHUD;
@@ -112,6 +113,7 @@ static NSMutableDictionary * gHistory;
     UIButton            *_infoButton;
     UITableView         *_tableView;
     UIActivityIndicatorView *_activityIndicatorView;
+    UILabel             *_subtitlesLabel;
     
     UITapGestureRecognizer *_tapGestureRecognizer;
     UITapGestureRecognizer *_doubleTapGestureRecognizer;
@@ -120,6 +122,8 @@ static NSMutableDictionary * gHistory;
 #ifdef DEBUG
     UILabel             *_messageLabel;
     NSTimeInterval      _debugStartTime;
+    NSUInteger          _debugAudioStatus;
+    NSDate              *_debugAudioStatusTS;
 #endif
 
     CGFloat             _bufferedDuration;
@@ -657,8 +661,11 @@ static NSMutableDictionary * gHistory;
         _dispatchQueue  = dispatch_queue_create("KxMovie", DISPATCH_QUEUE_SERIAL);
         _videoFrames    = [NSMutableArray array];
         _audioFrames    = [NSMutableArray array];
-        _scheduledLock  = [[NSLock alloc] init];
         
+        if (_decoder.subtitleStreamsCount) {
+            _subtitles = [NSMutableArray array];
+        }
+    
         if (_decoder.isNetwork) {
             
             _minBufferedDuration = NETWORK_MIN_BUFFERED_DURATION;
@@ -788,6 +795,24 @@ static NSMutableDictionary * gHistory;
                             action:@selector(progressDidChange:)
                   forControlEvents:UIControlEventValueChanged];
     }
+    
+    if (_decoder.subtitleStreamsCount) {
+        
+        CGSize size = self.view.bounds.size;
+        
+        _subtitlesLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, size.height, size.width, 0)];
+        _subtitlesLabel.numberOfLines = 0;
+        _subtitlesLabel.backgroundColor = [UIColor clearColor];
+        _subtitlesLabel.opaque = NO;
+        _subtitlesLabel.adjustsFontSizeToFitWidth = NO;
+        _subtitlesLabel.textAlignment = UITextAlignmentCenter;
+        _messageLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+        _subtitlesLabel.textColor = [UIColor whiteColor];
+        _subtitlesLabel.font = [UIFont systemFontOfSize:16];
+        _subtitlesLabel.hidden = YES;
+
+        [self.view addSubview:_subtitlesLabel];
+    }
 }
 
 - (void) setupUserInteraction
@@ -828,7 +853,7 @@ static NSMutableDictionary * gHistory;
         memset(outData, 0, numFrames * numChannels * sizeof(float));
         return;
     }
-   
+
     @autoreleasepool {
         
         while (numFrames > 0) {
@@ -849,8 +874,12 @@ static NSMutableDictionary * gHistory;
                             
                             if (delta < -2.0) {
                                 
-                                NSLog(@"desync audio (outrun) wait %.4f %.4f", _moviePosition, frame.position);
                                 memset(outData, 0, numFrames * numChannels * sizeof(float));
+#ifdef DEBUG
+                                //NSLog(@"desync audio (outrun) wait %.4f %.4f", _moviePosition, frame.position);
+                                _debugAudioStatus = 1;
+                                _debugAudioStatusTS = [NSDate date];
+#endif
                                 break; // silence and exit
                             }
                             
@@ -858,7 +887,11 @@ static NSMutableDictionary * gHistory;
                             
                             if (delta > 2.0 && count > 1) {
                                 
-                                NSLog(@"desync audio (lags) skip %.4f %.4f", _moviePosition, frame.position);
+#ifdef DEBUG
+                                //NSLog(@"desync audio (lags) skip %.4f %.4f", _moviePosition, frame.position);
+                                _debugAudioStatus = 2;
+                                _debugAudioStatusTS = [NSDate date];
+#endif
                                 continue;
                             }
                             
@@ -870,7 +903,7 @@ static NSMutableDictionary * gHistory;
                         }
                         
                         _currentAudioFramePos = 0;
-                        _currentAudioFrame = frame.samples;
+                        _currentAudioFrame = frame.samples;                        
                     }
                 }
             }
@@ -896,6 +929,10 @@ static NSMutableDictionary * gHistory;
                 
                 memset(outData, 0, numFrames * numChannels * sizeof(float));
                 //NSLog(@"silence audio");
+#ifdef DEBUG
+                _debugAudioStatus = 3;
+                _debugAudioStatusTS = [NSDate date];
+#endif
                 break;
             }
         }
@@ -971,6 +1008,17 @@ static NSMutableDictionary * gHistory;
             for (KxMovieFrame *frame in frames)
                 if (frame.type == KxMovieFrameTypeArtwork)
                     self.artworkFrame = (KxArtworkFrame *)frame;
+        }
+    }
+    
+    if (_decoder.validSubtitles) {
+        
+        @synchronized(_subtitles) {
+            
+            for (KxMovieFrame *frame in frames)
+                if (frame.type == KxMovieFrameTypeSubtitle) {
+                    [_subtitles addObject:frame];
+                }
         }
     }
     
@@ -1087,7 +1135,10 @@ static NSMutableDictionary * gHistory;
             self.artworkFrame = nil;
         }
     }
-    
+
+    if (_decoder.validSubtitles)
+        [self presentSubtitles];
+
     return interval;
 }
 
@@ -1106,6 +1157,88 @@ static NSMutableDictionary * gHistory;
     _moviePosition = frame.position;
         
     return frame.duration;
+}
+
+- (void) presentSubtitles
+{
+    NSArray *actual, *outdated;
+    
+    if ([self subtitleForPosition:_moviePosition
+                           actual:&actual
+                         outdated:&outdated]){
+        
+        if (outdated.count) {
+            @synchronized(_subtitles) {
+                [_subtitles removeObjectsInArray:outdated];
+            }
+        }
+        
+        if (actual.count) {
+            
+            NSMutableString *ms = [NSMutableString string];
+            for (KxSubtitleFrame *subtitle in actual.reverseObjectEnumerator) {
+                if (ms.length) [ms appendString:@"\n"];
+                [ms appendString:subtitle.text];
+            }
+            
+            if (![_subtitlesLabel.text isEqualToString:ms]) {
+                
+                CGSize viewSize = self.view.bounds.size;
+                CGSize size = [ms sizeWithFont:_subtitlesLabel.font
+                             constrainedToSize:CGSizeMake(viewSize.width, viewSize.height * 0.5)
+                                 lineBreakMode:NSLineBreakByTruncatingTail];
+                _subtitlesLabel.text = ms;
+                _subtitlesLabel.frame = CGRectMake(0, viewSize.height - size.height - 10,
+                                                   viewSize.width, size.height);
+                _subtitlesLabel.hidden = NO;
+            }
+            
+        } else {
+            
+            _subtitlesLabel.text = nil;
+            _subtitlesLabel.hidden = YES;
+        }
+    }
+}
+
+- (BOOL) subtitleForPosition: (CGFloat) position
+                      actual: (NSArray **) pActual
+                    outdated: (NSArray **) pOutdated
+{
+    if (!_subtitles.count)
+        return NO;
+    
+    NSMutableArray *actual = nil;
+    NSMutableArray *outdated = nil;
+    
+    for (KxSubtitleFrame *subtitle in _subtitles) {
+        
+        if (position < subtitle.position) {
+            
+            break; // assume what subtitles sorted by position
+            
+        } else if (position >= (subtitle.position + subtitle.duration)) {
+            
+            if (pOutdated) {
+                if (!outdated)
+                    outdated = [NSMutableArray array];
+                [outdated addObject:subtitle];
+            }
+            
+        } else {
+            
+            if (pActual) {
+                if (!actual)
+                    actual = [NSMutableArray array];
+                [actual addObject:subtitle];
+            }
+        }
+    }
+    
+    if (pActual) *pActual = actual;
+    if (pOutdated) *pOutdated = outdated;
+    
+    return actual.count || outdated.count;
 }
 
 - (void) updatePlayButton
@@ -1131,13 +1264,31 @@ static NSMutableDictionary * gHistory;
             
 #ifdef DEBUG
     const NSTimeInterval timeSinceStart = [NSDate timeIntervalSinceReferenceDate] - _debugStartTime;
-    _messageLabel.text = [NSString stringWithFormat:@"%d %d %c - %@ %@\n%@",
+    NSString *subinfo = _decoder.validSubtitles ? [NSString stringWithFormat: @" %d",_subtitles.count] : @"";
+    
+    NSString *audioStatus;
+    
+    if (_debugAudioStatus) {
+        
+        if (NSOrderedAscending == [_debugAudioStatusTS compare: [NSDate dateWithTimeIntervalSinceNow:-0.5]]) {
+            _debugAudioStatus = 0;
+        }
+    }
+    
+    if (_debugAudioStatus == 1) audioStatus = @"\n(audio outrun)";
+    else if (_debugAudioStatus == 2) audioStatus = @"\n(audio lags)";
+    else if (_debugAudioStatus == 3) audioStatus = @"\n(audio silence)";
+    else audioStatus = @"";
+    
+    _messageLabel.text = [NSString stringWithFormat:@"%d %d%@ %c - %@ %@ %@\n%@",
                           _videoFrames.count,
                           _audioFrames.count,
+                          subinfo,
                           self.decoding ? 'D' : ' ',
                           formatTimeInterval(timeSinceStart, NO),
                           //timeSinceStart > _moviePosition + 0.5 ? @" (lags)" : @"",
                           _decoder.isEOF ? @"- END" : @"",
+                          audioStatus,
                           _buffered ? [NSString stringWithFormat:@"buffering %.1f%%", _bufferedDuration / _minBufferedDuration * 100] : @""];
 #endif
 }
@@ -1219,6 +1370,12 @@ static NSMutableDictionary * gHistory;
         
         [_audioFrames removeAllObjects];
         _currentAudioFrame = nil;
+    }
+    
+    if (_subtitles) {
+        @synchronized(_subtitles) {
+            [_subtitles removeAllObjects];
+        }
     }
     
     _bufferedDuration = 0;
@@ -1308,6 +1465,13 @@ static NSMutableDictionary * gHistory;
     [alertView show];
 }
 
+- (BOOL) interruptDecoder
+{
+    if (!_decoder)
+        return NO;
+    return _interrupted;
+}
+
 #pragma mark - Table view data source
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
@@ -1318,10 +1482,22 @@ static NSMutableDictionary * gHistory;
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
     switch (section) {
-        case KxMovieInfoSectionGeneral:     return NSLocalizedString(@"General", nil);
-        case KxMovieInfoSectionMetadata:    return NSLocalizedString(@"Metadata", nil);
-        case KxMovieInfoSectionVideo:       return NSLocalizedString(@"Video", nil);
-        case KxMovieInfoSectionAudio:       return NSLocalizedString(@"Audio", nil);
+        case KxMovieInfoSectionGeneral:
+            return NSLocalizedString(@"General", nil);
+        case KxMovieInfoSectionMetadata:
+            return NSLocalizedString(@"Metadata", nil);
+        case KxMovieInfoSectionVideo: {
+            NSArray *a = _decoder.info[@"video"];
+            return a.count ? NSLocalizedString(@"Video", nil) : nil;
+        }
+        case KxMovieInfoSectionAudio: {
+            NSArray *a = _decoder.info[@"audio"];
+            return a.count ?  NSLocalizedString(@"Audio", nil) : nil;
+        }
+        case KxMovieInfoSectionSubtitles: {
+            NSArray *a = _decoder.info[@"subtitles"];
+            return a.count ? NSLocalizedString(@"Subtitles", nil) : nil;
+        }
     }
     return @"";
 }
@@ -1338,13 +1514,18 @@ static NSMutableDictionary * gHistory;
         }
             
         case KxMovieInfoSectionVideo: {
-            NSArray *a = [_decoder.info valueForKey:@"video"];
+            NSArray *a = _decoder.info[@"video"];
             return a.count;
         }
             
         case KxMovieInfoSectionAudio: {
-            NSArray *a = [_decoder.info valueForKey:@"audio"];
+            NSArray *a = _decoder.info[@"audio"];
             return a.count;
+        }
+            
+        case KxMovieInfoSectionSubtitles: {
+            NSArray *a = _decoder.info[@"subtitles"];
+            return a.count ? a.count + 1 : 0;
         }
             
         default:
@@ -1370,14 +1551,14 @@ static NSMutableDictionary * gHistory;
     
         if (indexPath.row == KxMovieInfoGeneralBitrate) {
             
-            int bitrate = [[_decoder.info valueForKey:@"bitrate"] intValue];
+            int bitrate = [_decoder.info[@"bitrate"] intValue];
             cell = [self mkCell:@"ValueCell" withStyle:UITableViewCellStyleValue1];
             cell.textLabel.text = NSLocalizedString(@"Bitrate", nil);
             cell.detailTextLabel.text = [NSString stringWithFormat:@"%d kb/s",bitrate / 1000];
             
         } else if (indexPath.row == KxMovieInfoGeneralFormat) {
 
-            NSString *format = [_decoder.info valueForKey:@"format"];            
+            NSString *format = _decoder.info[@"format"];
             cell = [self mkCell:@"ValueCell" withStyle:UITableViewCellStyleValue1];
             cell.textLabel.text = NSLocalizedString(@"Format", nil);
             cell.detailTextLabel.text = format ? format : @"-";
@@ -1385,7 +1566,7 @@ static NSMutableDictionary * gHistory;
         
     } else if (indexPath.section == KxMovieInfoSectionMetadata) {
       
-        NSDictionary *d = [_decoder.info valueForKey:@"metadata"];
+        NSDictionary *d = _decoder.info[@"metadata"];
         NSString *key = d.allKeys[indexPath.row];
         cell = [self mkCell:@"ValueCell" withStyle:UITableViewCellStyleValue1];
         cell.textLabel.text = key.capitalizedString;
@@ -1393,7 +1574,7 @@ static NSMutableDictionary * gHistory;
         
     } else if (indexPath.section == KxMovieInfoSectionVideo) {
         
-        NSArray *a = [_decoder.info valueForKey:@"video"];
+        NSArray *a = _decoder.info[@"video"];
         cell = [self mkCell:@"VideoCell" withStyle:UITableViewCellStyleValue1];
         cell.textLabel.text = a[indexPath.row];
         cell.textLabel.font = [UIFont systemFontOfSize:14];
@@ -1401,24 +1582,34 @@ static NSMutableDictionary * gHistory;
         
     } else if (indexPath.section == KxMovieInfoSectionAudio) {
         
-        NSArray *a = [_decoder.info valueForKey:@"audio"];
+        NSArray *a = _decoder.info[@"audio"];
         cell = [self mkCell:@"AudioCell" withStyle:UITableViewCellStyleValue1];
         cell.textLabel.text = a[indexPath.row];
         cell.textLabel.font = [UIFont systemFontOfSize:14];
         cell.textLabel.numberOfLines = 2;
         BOOL selected = _decoder.selectedAudioStream == indexPath.row;
         cell.accessoryType = selected ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone;
+        
+    } else if (indexPath.section == KxMovieInfoSectionSubtitles) {
+        
+        NSArray *a = _decoder.info[@"subtitles"];
+        
+        cell = [self mkCell:@"SubtitleCell" withStyle:UITableViewCellStyleValue1];
+        cell.textLabel.font = [UIFont systemFontOfSize:14];
+        cell.textLabel.numberOfLines = 1;
+        
+        if (indexPath.row) {
+            cell.textLabel.text = a[indexPath.row - 1];
+        } else {
+            cell.textLabel.text = NSLocalizedString(@"Disable", nil);
+        }
+        
+        const BOOL selected = _decoder.selectedSubtitleStream == (indexPath.row - 1);
+        cell.accessoryType = selected ? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone;
     }
     
      cell.selectionStyle = UITableViewCellSelectionStyleNone;
     return cell;
-}
-
-- (BOOL) interruptDecoder
-{
-    if (!_decoder)
-        return NO;
-    return _interrupted;
 }
 
 #pragma mark - Table view delegate
@@ -1444,6 +1635,35 @@ static NSMutableDictionary * gHistory;
                 indexPath = [NSIndexPath indexPathForRow:selected inSection:KxMovieInfoSectionAudio];
                 cell = [_tableView cellForRowAtIndexPath:indexPath];
                 cell.accessoryType = UITableViewCellAccessoryNone;
+            }
+        }
+        
+    } else if (indexPath.section == KxMovieInfoSectionSubtitles) {
+        
+        NSInteger selected = _decoder.selectedSubtitleStream;
+        
+        if (selected != (indexPath.row - 1)) {
+            
+            _decoder.selectedSubtitleStream = indexPath.row - 1;
+            NSInteger now = _decoder.selectedSubtitleStream;
+            
+            if (now == (indexPath.row - 1)) {
+                
+                UITableViewCell *cell;
+                
+                cell = [_tableView cellForRowAtIndexPath:indexPath];
+                cell.accessoryType = UITableViewCellAccessoryCheckmark;
+                
+                indexPath = [NSIndexPath indexPathForRow:selected + 1 inSection:KxMovieInfoSectionSubtitles];
+                cell = [_tableView cellForRowAtIndexPath:indexPath];
+                cell.accessoryType = UITableViewCellAccessoryNone;
+            }
+            
+            // clear subtitles
+            _subtitlesLabel.text = nil;
+            _subtitlesLabel.hidden = YES;
+            @synchronized(_subtitles) {
+                [_subtitles removeAllObjects];
             }
         }
     }

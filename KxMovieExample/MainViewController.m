@@ -104,7 +104,8 @@
             NSDictionary *attr = [fm attributesOfItemAtPath:path error:nil];
             if (attr) {
                 id fileType = [attr valueForKey:NSFileType];
-                if ([fileType isEqual: NSFileTypeRegular]) {
+                if ([fileType isEqual: NSFileTypeRegular] ||
+                    [fileType isEqual: NSFileTypeSymbolicLink]) {
                     
                     NSString *ext = path.pathExtension.lowercaseString;
                     
