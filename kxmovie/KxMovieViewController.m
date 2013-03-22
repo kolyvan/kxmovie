@@ -24,6 +24,8 @@ NSString * const KxMovieParameterDisableDeinterlacing = @"KxMovieParameterDisabl
 
 static NSString * formatTimeInterval(CGFloat seconds, BOOL isLeft)
 {
+    seconds = MAX(0, seconds);
+    
     NSInteger s = seconds;
     NSInteger m = s / 60;
     NSInteger h = m / 60;
@@ -1331,7 +1333,7 @@ static NSMutableDictionary * gHistory;
     
     if (_decoder.duration != MAXFLOAT)
         _leftLabel.text = formatTimeInterval(duration - position, YES);
-            
+
 #ifdef DEBUG
     const NSTimeInterval timeSinceStart = [NSDate timeIntervalSinceReferenceDate] - _debugStartTime;
     NSString *subinfo = _decoder.validSubtitles ? [NSString stringWithFormat: @" %d",_subtitles.count] : @"";
