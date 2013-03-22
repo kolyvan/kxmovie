@@ -558,6 +558,9 @@ static NSMutableDictionary * gHistory;
         
         return;
     }
+    
+    if (_interrupted)
+        return;
 
     self.playing = YES;
     _interrupted = NO;
@@ -967,21 +970,8 @@ static NSMutableDictionary * gHistory;
     }
 }
 
-- (BOOL) decodeFrames
+- (BOOL) addFrames: (NSArray *)frames
 {
-    //NSAssert(dispatch_get_current_queue() == _dispatchQueue, @"bugcheck");
-    
-    NSArray *frames = nil;
-    
-    if (_decoder.validVideo ||
-        _decoder.validAudio) {
-        
-        frames = [_decoder decodeFrames:0];
-    }
-    
-    if (!frames.count)
-        return NO;
-    
     if (_decoder.validVideo) {
         
         @synchronized(_videoFrames) {
@@ -989,7 +979,7 @@ static NSMutableDictionary * gHistory;
             for (KxMovieFrame *frame in frames)
                 if (frame.type == KxMovieFrameTypeVideo) {
                     [_videoFrames addObject:frame];
-                    _bufferedDuration += frame.duration;                    
+                    _bufferedDuration += frame.duration;
                 }
         }
     }
@@ -1025,32 +1015,73 @@ static NSMutableDictionary * gHistory;
         }
     }
     
-    return YES;
+    return self.playing && _bufferedDuration < _maxBufferedDuration;
+}
+
+- (BOOL) decodeFrames
+{
+    //NSAssert(dispatch_get_current_queue() == _dispatchQueue, @"bugcheck");
+    
+    NSArray *frames = nil;
+    
+    if (_decoder.validVideo ||
+        _decoder.validAudio) {
+        
+        frames = [_decoder decodeFrames:0];
+    }
+    
+    if (frames.count) {
+        return [self addFrames: frames];
+    }
+    return NO;
 }
 
 - (void) asyncDecodeFrames
 {
     if (self.decoding)
         return;
-        
+    
+    __weak KxMovieViewController *weakSelf = self;
+    __weak KxMovieDecoder *weakDecoder = _decoder;
+    
+    const CGFloat duration = _decoder.isNetwork ? .0f : 0.1f;
+    
     self.decoding = YES;
     dispatch_async(_dispatchQueue, ^{
         
-        if (self.playing) {
-            
-            BOOL good;
-            do {
-                
-                @autoreleasepool {
-                    good = [self decodeFrames];
-                }
-                
-            } while (good &&
-                     self.playing &&
-                     _bufferedDuration < _maxBufferedDuration);
+        {
+            __strong KxMovieViewController *strongSelf = weakSelf;
+            if (!strongSelf.playing)
+                return;
         }
-        self.decoding = NO;
-    });    
+        
+        BOOL good = YES;
+        while (good) {
+            
+            good = NO;
+            
+            @autoreleasepool {
+                
+                __strong KxMovieDecoder *decoder = weakDecoder;
+                
+                if (decoder && (decoder.validVideo || decoder.validAudio)) {
+                    
+                    NSArray *frames = [decoder decodeFrames:duration];
+                    if (frames.count) {
+                        
+                        __strong KxMovieViewController *strongSelf = weakSelf;
+                        if (strongSelf)
+                            good = [strongSelf addFrames:frames];
+                    }
+                }
+            }
+        }
+                
+        {
+            __strong KxMovieViewController *strongSelf = weakSelf;
+            if (strongSelf) strongSelf.decoding = NO;
+        }
+    });
 }
 
 - (void) tick
@@ -1363,40 +1394,71 @@ static NSMutableDictionary * gHistory;
     // }
 }
 
+- (void) setMoviePositionFromDecoder
+{
+    _moviePosition = _decoder.position;
+}
+
+- (void) setDecoderPosition: (CGFloat) position
+{
+    _decoder.position = position;
+}
+
+- (void) enableUpdateHUD
+{
+    _disableUpdateHUD = NO;
+}
+
 - (void) updatePosition: (CGFloat) position
                playMode: (BOOL) playMode
 {
     [self freeBufferedFrames];
     
     position = MIN(_decoder.duration - 1, MAX(0, position));
+    
+    __weak KxMovieViewController *weakSelf = self;
 
     dispatch_async(_dispatchQueue, ^{
         
-        _decoder.position = position;
-        
         if (playMode) {
+        
+            {
+                __strong KxMovieViewController *strongSelf = weakSelf;
+                if (!strongSelf) return;
+                [strongSelf setDecoderPosition: position];
+            }
             
             dispatch_async(dispatch_get_main_queue(), ^{
         
-                _moviePosition = _decoder.position;
-                [self play];
+                __strong KxMovieViewController *strongSelf = weakSelf;
+                if (strongSelf) {
+                    [strongSelf setMoviePositionFromDecoder];
+                    [strongSelf play];
+                }
             });
             
         } else {
 
-            [self decodeFrames];
+            {
+                __strong KxMovieViewController *strongSelf = weakSelf;
+                if (!strongSelf) return;
+                [strongSelf setDecoderPosition: position];
+                [strongSelf decodeFrames];
+            }
             
             dispatch_async(dispatch_get_main_queue(), ^{
-            
-                _disableUpdateHUD = NO;
-                _moviePosition = _decoder.position;
-                [self presentFrame];
-                [self updateHUD];
+                
+                __strong KxMovieViewController *strongSelf = weakSelf;
+                if (strongSelf) {
+                
+                    [strongSelf enableUpdateHUD];
+                    [strongSelf setMoviePositionFromDecoder];
+                    [strongSelf presentFrame];
+                    [strongSelf updateHUD];
+                }
             });
         }        
     });
-   
-    //NSLog(@"movie.position = %.1f", position);
 }
 
 - (void) freeBufferedFrames
