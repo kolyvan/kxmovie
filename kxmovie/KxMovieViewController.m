@@ -656,7 +656,7 @@ static NSMutableDictionary * gHistory;
                withError: (NSError *) error
 {
     NSLog(@"setMovieDecoder");
-        
+            
     if (!error && decoder) {
         
         _decoder        = decoder;
@@ -728,7 +728,8 @@ static NSMutableDictionary * gHistory;
          if (self.isViewLoaded && self.view.window) {
         
              [_activityIndicatorView stopAnimating];
-             [self handleDecoderMovieError: error];
+             if (!_interrupted)
+                 [self handleDecoderMovieError: error];
          }
     }
 }
@@ -1505,8 +1506,8 @@ static NSMutableDictionary * gHistory;
 
 - (BOOL) interruptDecoder
 {
-    if (!_decoder)
-        return NO;
+    //if (!_decoder)
+    //    return NO;
     return _interrupted;
 }
 
