@@ -19,6 +19,7 @@
 NSString * const KxMovieParameterMinBufferedDuration = @"KxMovieParameterMinBufferedDuration";
 NSString * const KxMovieParameterMaxBufferedDuration = @"KxMovieParameterMaxBufferedDuration";
 NSString * const KxMovieParameterDisableDeinterlacing = @"KxMovieParameterDisableDeinterlacing";
+NSString * const KxMovieParameterIOStream = @"KxMovieParameterIOStream";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -178,6 +179,12 @@ static NSMutableDictionary * gHistory;
         
         KxMovieDecoder *decoder = [[KxMovieDecoder alloc] init];
         
+        id param = parameters[KxMovieParameterIOStream];
+        if (param && [param conformsToProtocol:@protocol(KxMovieIOStream)]) {
+            
+            decoder.ioStream = param;
+        }
+                
         decoder.interruptCallback = ^BOOL(){
             
             __strong KxMovieViewController *strongSelf = weakSelf;

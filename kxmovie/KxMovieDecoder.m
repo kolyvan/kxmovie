@@ -276,6 +276,9 @@ static BOOL isNetworkPath (NSString *path)
 
 static int interrupt_callback(void *ctx);
 
+static int iostream_readbuffer(void *ctx, uint8_t *buf, int buf_size);
+static int64_t iostream_seekoffset(void *ctx, int64_t offset, int whence);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 @interface KxMovieFrame()
@@ -420,6 +423,7 @@ static int interrupt_callback(void *ctx);
     KxVideoFrameFormat  _videoFrameFormat;
     NSUInteger          _artworkStream;
     NSInteger           _subtitleASSEvents;
+    AVIOContext         *_avioContext;
 }
 @end
 
@@ -764,19 +768,60 @@ static int interrupt_callback(void *ctx);
 - (kxMovieError) openInput: (NSString *) path
 {
     AVFormatContext *formatCtx = NULL;
+    AVIOContext *avioContext = NULL;
     
-    if (_interruptCallback) {
+    if (_interruptCallback || _ioStream) {
         
         formatCtx = avformat_alloc_context();
         if (!formatCtx)
             return kxMovieErrorOpenFile;
+    }
+    
+    if (_interruptCallback) {
         
         AVIOInterruptCB cb = {interrupt_callback, (__bridge void *)(self)};
         formatCtx->interrupt_callback = cb;
     }
     
+    if (_ioStream) {
+        
+        if (![_ioStream ioStreamOpen:_path]) {
+            
+            avformat_free_context(formatCtx);
+            return kxMovieErrorOpenFile;
+        }
+        
+        const int bufSize = 16384 + FF_INPUT_BUFFER_PADDING_SIZE;
+        Byte *buffer = av_malloc(bufSize);
+        if (!buffer) {
+            avformat_free_context(formatCtx);
+            return kxMovieErrorOpenFile;
+        }
+        
+        avioContext = avio_alloc_context(buffer,
+                                          bufSize,
+                                          0,
+                                           (__bridge void *)(self),
+                                          iostream_readbuffer,
+                                          0,
+                                          iostream_seekoffset);
+        
+        if (!avioContext) {
+            av_free(buffer);
+            avformat_free_context(formatCtx);
+            return kxMovieErrorOpenFile;
+        }
+        
+        formatCtx->pb = avioContext;
+    }
+    
     if (avformat_open_input(&formatCtx, [path cStringUsingEncoding: NSUTF8StringEncoding], NULL, NULL) < 0) {
         
+        if (avioContext) {
+            
+            av_free(avioContext->buffer);
+            av_free(avioContext);
+        }        
         if (formatCtx)
             avformat_free_context(formatCtx);
         return kxMovieErrorOpenFile;
@@ -784,6 +829,11 @@ static int interrupt_callback(void *ctx);
     
     if (avformat_find_stream_info(formatCtx, NULL) < 0) {
         
+        if (avioContext) {
+            
+            av_free(avioContext->buffer);
+            av_free(avioContext);
+        }
         avformat_close_input(&formatCtx);
         return kxMovieErrorStreamInfoNotFound;
     }
@@ -791,6 +841,7 @@ static int interrupt_callback(void *ctx);
     av_dump_format(formatCtx, 0, [path.lastPathComponent cStringUsingEncoding: NSUTF8StringEncoding], false);
     
     _formatCtx = formatCtx;
+    _avioContext = avioContext;
     return kxMovieErrorNone;
 }
 
@@ -1004,6 +1055,16 @@ static int interrupt_callback(void *ctx);
         avformat_close_input(&_formatCtx);
         _formatCtx = NULL;
     }
+    
+    if (_avioContext) {
+        
+        av_free(_avioContext->buffer);
+        av_free(_avioContext);
+        _avioContext = NULL;
+    }
+    
+    if (_ioStream)
+        [_ioStream ioStreamClose];
 }
 
 - (void) closeVideoStream
@@ -1517,6 +1578,36 @@ static int interrupt_callback(void *ctx)
     const BOOL r = [p interruptDecoder];
     if (r) NSLog(@"DEBUG: INTERRUPT_CALLBACK!");
     return r;
+}
+
+static int iostream_readbuffer(void *ctx, uint8_t *buf, int buf_size)
+{
+    if (ctx) {
+        __unsafe_unretained KxMovieDecoder *p = (__bridge KxMovieDecoder *)ctx;
+        if (p.ioStream) {
+            return [p.ioStream ioStreamReadBuffer:buf bufSize:buf_size];
+        }
+    }
+    return -1;
+}
+
+static int64_t iostream_seekoffset(void *ctx, int64_t offset, int whence)
+{
+    if (ctx) {
+        __unsafe_unretained KxMovieDecoder *p = (__bridge KxMovieDecoder *)ctx;
+        if (p.ioStream) {
+            
+            if (whence == AVSEEK_SIZE) {
+                
+                if (![p.ioStream respondsToSelector:@selector(ioStreamSize)])
+                    return -1;
+                return [p.ioStream ioStreamSize];
+            }
+            return [p.ioStream ioStreamSeekOffset:offset whence:whence];
+        }
+    }
+    
+    return -1;
 }
 
 //////////////////////////////////////////////////////////////////////////////

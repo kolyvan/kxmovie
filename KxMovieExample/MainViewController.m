@@ -11,6 +11,131 @@
 
 #import "MainViewController.h"
 #import "KxMovieViewController.h"
+#import "KxMovieDecoder.h"
+
+@interface KxMovieIOStreamFile : NSObject<KxMovieIOStream>
+@end
+
+@implementation KxMovieIOStreamFile {
+    
+    NSFileHandle *_fileHandle;
+    UInt64       _fileSize;
+}
+
+- (BOOL) ioStreamOpen: (NSString *)path
+{
+    [self ioStreamClose];
+    
+    NSFileManager *fm = [[NSFileManager alloc] init];
+    NSDictionary *attr =[fm attributesOfItemAtPath:path error:nil];
+    if (!attr) {
+        NSLog(@"ioStreamOpen, file not found");
+        return NO;
+    }
+    
+    if ([attr fileType] == NSFileTypeSymbolicLink) {
+        
+        path = [fm destinationOfSymbolicLinkAtPath:path error:nil];
+        if (!path) {
+        
+            NSLog(@"ioStreamOpen, invalid symlink");
+            return NO;
+        }
+        
+        attr = [fm attributesOfItemAtPath:path error:nil];
+    }
+    
+    _fileSize = [attr fileSize];
+    if (!_fileSize) _fileSize = -1;
+    
+    _fileHandle = [NSFileHandle fileHandleForReadingAtPath:path];
+    if (!_fileHandle) {
+        NSLog(@"ioStreamOpen, unable open file");
+        return NO;
+    }
+    
+    //NSLog(@"ioStreamOpen, success");
+    return YES;
+}
+
+- (void) ioStreamClose
+{
+    if (_fileHandle) {
+        
+        [_fileHandle closeFile];
+        _fileHandle = nil;
+        //NSLog(@"ioStreamClose");
+    }
+}
+
+- (NSInteger) ioStreamReadBuffer: (Byte *) buffer bufSize: (NSInteger) bufSize
+{
+    NSData *data = nil;
+    NSInteger result = -1;
+    
+    @try {
+        data = [_fileHandle readDataOfLength:bufSize];
+    } @catch (NSException *exp) {
+        
+        NSLog(@"exception during readBuffer: %@", exp);
+    }
+    
+    if (data) {
+        
+        result = MIN(bufSize, data.length);
+        memcpy(buffer, data.bytes, result);
+    }
+        
+    //NSLog(@"readBuffer %d", result);
+    return result;
+}
+
+- (NSInteger) ioStreamWriteBuffer: (Byte *) buffer bufSize: (NSInteger) bufSize
+{
+    return -1;
+}
+
+- (UInt64) ioStreamSeekOffset: (UInt64) offset whence: (NSInteger) whence
+{
+    UInt64 result = -1;
+    
+    @try {
+        
+        if (whence == SEEK_SET) {
+            
+            [_fileHandle seekToFileOffset:offset];
+            result = _fileHandle.offsetInFile;
+            
+        } else if (whence == SEEK_CUR) {
+            
+            [_fileHandle seekToFileOffset:_fileHandle.offsetInFile + offset];
+            result = _fileHandle.offsetInFile;
+            
+        } else if (whence == SEEK_END) {
+            
+            [_fileHandle seekToEndOfFile];
+            [_fileHandle seekToFileOffset:_fileHandle.offsetInFile + offset];
+            result = _fileHandle.offsetInFile;
+        }
+        
+    } @catch (NSException *exp) {
+        
+        NSLog(@"exception during seekOffset: %@", exp);
+    }
+    
+    //NSLog(@"seekOffset %lld", result);
+    return result;
+}
+
+- (UInt64) ioStreamSize
+{
+    return _fileSize;
+}
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 @interface MainViewController () {
     NSArray *_localMovies;
@@ -215,6 +340,9 @@
     // disable buffering
     //parameters[KxMovieParameterMinBufferedDuration] = @(0.0f);
     //parameters[KxMovieParameterMaxBufferedDuration] = @(0.0f);
+    
+    if (indexPath.section == 1)
+      parameters[KxMovieParameterIOStream] = [[KxMovieIOStreamFile alloc] init];
     
     KxMovieViewController *vc = [KxMovieViewController movieViewControllerWithContentPath:path
                                                                                parameters:parameters];
