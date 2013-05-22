@@ -17,6 +17,10 @@
 #include "libavutil/pixdesc.h"
 #import "KxAudioManager.h"
 
+NSString * const KxMovieParameterMinBufferedDuration = @"KxMovieParameterMinBufferedDuration";
+NSString * const KxMovieParameterMaxBufferedDuration = @"KxMovieParameterMaxBufferedDuration";
+NSString * const KxMovieParameterDisableDeinterlacing = @"KxMovieParameterDisableDeinterlacing";
+
 ////////////////////////////////////////////////////////////////////////////////
 NSString * kxmovieErrorDomain = @"ru.kolyvan.kxmovie";
 
