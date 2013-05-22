@@ -22,6 +22,13 @@ For play movies:
 	vc = [KxMovieViewController movieViewControllerWithContentPath:path parameters:nil];
 	[self presentViewController:vc animated:YES completion:nil];
 
+or, for use as a UIView:
+
+	KxMovieView * videoView;
+        CGRect bounds = self.view.bounds;
+        videoView = [KxMovieView movieViewControllerWithContentPath:path parameters:parameters withFrame:bounds];
+        [vc.view addSubview:videoView];
+
 See KxMovieExample demo project as example of using.
 
 Also, you can include kxmovie as subproject.
