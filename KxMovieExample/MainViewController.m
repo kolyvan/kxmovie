@@ -229,7 +229,7 @@
         parameters[KxMovieParameterMinBufferedDuration] = @(0.0f);
         parameters[KxMovieParameterMaxBufferedDuration] = @(0.0f);
         KxMovieView * videoView;
-        CGRect bounds = self.view.bounds;
+        CGRect bounds = vc.view.bounds;
         videoView = [KxMovieView movieViewControllerWithContentPath:path parameters:parameters withFrame:bounds];
 
         [vc.view addSubview:videoView];
