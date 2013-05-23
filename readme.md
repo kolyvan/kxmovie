@@ -24,8 +24,9 @@ For play movies (usage as UIViewController):
 
 or, for use as a UIView:
 
+	UIViewController * vc = [[UIViewController alloc] init];
 	KxMovieView * videoView;
-	CGRect bounds = self.view.bounds;
+	CGRect bounds = vc.view.bounds;
 	videoView = [KxMovieView movieViewControllerWithContentPath:path parameters:parameters withFrame:bounds];
 	[vc.view addSubview:videoView];
 
