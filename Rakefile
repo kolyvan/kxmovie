@@ -71,7 +71,7 @@ FFMPEG_BUILD_ARGS = [
 '--target-os=darwin',
 '--enable-cross-compile',
 #'--enable-nonfree',
-'--enable-gpl',
+#'--enable-gpl',
 '--enable-version3',
 ]
 

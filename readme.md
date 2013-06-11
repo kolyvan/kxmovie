@@ -16,11 +16,19 @@ For this open console and type in
 2. Add frameworks: MediaPlayer, CoreAudio, AudioToolbox, Accelerate, QuartzCore, OpenGLES and libz.dylib .
 3. Add libs: libkxmovie.a, libavcodec.a, libavformat.a, libavutil.a, libswscale.a, libswresample.a
 
-For play movies:
+For play movies (usage as UIViewController):
 
 	ViewController *vc;
 	vc = [KxMovieViewController movieViewControllerWithContentPath:path parameters:nil];
 	[self presentViewController:vc animated:YES completion:nil];
+
+or, for use as a UIView:
+
+	UIViewController * vc = [[UIViewController alloc] init];
+	KxMovieView * videoView;
+	CGRect bounds = vc.view.bounds;
+	videoView = [KxMovieView movieViewControllerWithContentPath:path parameters:parameters withFrame:bounds];
+	[vc.view addSubview:videoView];
 
 See KxMovieExample demo project as example of using.
 

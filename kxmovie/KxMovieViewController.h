@@ -1,5 +1,5 @@
 //
-//  ViewController.h
+//  KxMovieViewController.h
 //  kxmovieapp
 //
 //  Created by Kolyvan on 11.10.12.
@@ -10,6 +10,7 @@
 //  KxMovie is licenced under the LGPL v3, see lgpl-3.0.txt
 
 #import <UIKit/UIKit.h>
+#import "HudView.h"
 
 @class KxMovieDecoder;
 

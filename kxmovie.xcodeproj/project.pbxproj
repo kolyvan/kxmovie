@@ -47,6 +47,12 @@
 		87FD6191163A75DC0090956E /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E79437163910D0000A0848 /* QuartzCore.framework */; };
 		87FD6192163A75DF0090956E /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E79439163910EA000A0848 /* Accelerate.framework */; };
 		87FD6193163A75E10090956E /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87E79435163910CA000A0848 /* OpenGLES.framework */; };
+		AF15BDCA174CF672005C8C3B /* KxMovieView.m in Sources */ = {isa = PBXBuildFile; fileRef = AF15BDC9174CF672005C8C3B /* KxMovieView.m */; };
+		AF15BDCB174CF672005C8C3B /* KxMovieView.m in Sources */ = {isa = PBXBuildFile; fileRef = AF15BDC9174CF672005C8C3B /* KxMovieView.m */; };
+		AF15BDCE174CF798005C8C3B /* KxCommon.m in Sources */ = {isa = PBXBuildFile; fileRef = AF15BDCD174CF798005C8C3B /* KxCommon.m */; };
+		AF15BDCF174CF798005C8C3B /* KxCommon.m in Sources */ = {isa = PBXBuildFile; fileRef = AF15BDCD174CF798005C8C3B /* KxCommon.m */; };
+		AF15BDD6174CF862005C8C3B /* HudView.m in Sources */ = {isa = PBXBuildFile; fileRef = AF15BDD5174CF862005C8C3B /* HudView.m */; };
+		AF15BDD7174CF862005C8C3B /* HudView.m in Sources */ = {isa = PBXBuildFile; fileRef = AF15BDD5174CF862005C8C3B /* HudView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -101,6 +107,12 @@
 		87E7946116394577000A0848 /* KxAudioManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KxAudioManager.h; sourceTree = "<group>"; };
 		87FD6175163A75440090956E /* libkxmovie.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libkxmovie.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		87FD6179163A75440090956E /* kxmovie-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "kxmovie-Prefix.pch"; sourceTree = "<group>"; };
+		AF15BDC8174CF672005C8C3B /* KxMovieView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KxMovieView.h; sourceTree = "<group>"; };
+		AF15BDC9174CF672005C8C3B /* KxMovieView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KxMovieView.m; sourceTree = "<group>"; };
+		AF15BDCC174CF798005C8C3B /* KxCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KxCommon.h; sourceTree = "<group>"; };
+		AF15BDCD174CF798005C8C3B /* KxCommon.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KxCommon.m; sourceTree = "<group>"; };
+		AF15BDD4174CF862005C8C3B /* HudView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HudView.h; sourceTree = "<group>"; };
+		AF15BDD5174CF862005C8C3B /* HudView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HudView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -217,6 +229,8 @@
 			isa = PBXGroup;
 			children = (
 				87E7941F1639107F000A0848 /* kxmovie.bundle */,
+				AF15BDCC174CF798005C8C3B /* KxCommon.h */,
+				AF15BDCD174CF798005C8C3B /* KxCommon.m */,
 				87E7946116394577000A0848 /* KxAudioManager.h */,
 				87E7941E1639107F000A0848 /* KxAudioManager.m */,
 				87E794201639107F000A0848 /* KxMovieDecoder.h */,
@@ -225,7 +239,11 @@
 				87E794231639107F000A0848 /* KxMovieGLView.m */,
 				87E794241639107F000A0848 /* KxMovieViewController.h */,
 				87E794251639107F000A0848 /* KxMovieViewController.m */,
+				AF15BDC8174CF672005C8C3B /* KxMovieView.h */,
+				AF15BDC9174CF672005C8C3B /* KxMovieView.m */,
 				87FD6178163A75440090956E /* Supporting Files */,
+				AF15BDD4174CF862005C8C3B /* HudView.h */,
+				AF15BDD5174CF862005C8C3B /* HudView.m */,
 			);
 			path = kxmovie;
 			sourceTree = "<group>";
@@ -328,6 +346,9 @@
 				87E7942A1639107F000A0848 /* KxMovieViewController.m in Sources */,
 				87E7942F1639108E000A0848 /* AppDelegate.m in Sources */,
 				87E794301639108E000A0848 /* MainViewController.m in Sources */,
+				AF15BDCA174CF672005C8C3B /* KxMovieView.m in Sources */,
+				AF15BDCE174CF798005C8C3B /* KxCommon.m in Sources */,
+				AF15BDD6174CF862005C8C3B /* HudView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -339,6 +360,9 @@
 				87FD6183163A75B10090956E /* KxMovieDecoder.m in Sources */,
 				87FD6184163A75B50090956E /* KxMovieGLView.m in Sources */,
 				87FD6185163A75B70090956E /* KxMovieViewController.m in Sources */,
+				AF15BDCB174CF672005C8C3B /* KxMovieView.m in Sources */,
+				AF15BDCF174CF798005C8C3B /* KxCommon.m in Sources */,
+				AF15BDD7174CF862005C8C3B /* HudView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

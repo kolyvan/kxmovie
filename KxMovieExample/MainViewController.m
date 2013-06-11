@@ -11,6 +11,7 @@
 
 #import "MainViewController.h"
 #import "KxMovieViewController.h"
+#import "KxMovieView.h"
 
 @interface MainViewController () {
     NSArray *_localMovies;
@@ -142,14 +143,15 @@
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-    return 2;
+    return 3;
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
     switch (section) {
-        case 0:     return @"Remote";
+        case 0:     return @"Remote (KxMovieViewController)";
         case 1:     return @"Local";
+        case 2:     return @"Remote (KxMovieView)";
     }
     return @"";
 }
@@ -159,6 +161,7 @@
     switch (section) {
         case 0:     return _remoteMovies.count;
         case 1:     return _localMovies.count;
+        case 2:     return _remoteMovies.count;
     }
     return 0;
 }
@@ -175,7 +178,7 @@
     
     NSString *path;
     
-    if (indexPath.section == 0) {
+    if (indexPath.section == 0 || indexPath.section == 2) {
         
         path = _remoteMovies[indexPath.row];
         
@@ -188,6 +191,11 @@
     return cell;
 }
 
+-(void)goBack
+{
+
+}
+
 #pragma mark - Table view delegate
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
@@ -195,13 +203,44 @@
     NSString *path;
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     
-    if (indexPath.section == 0) {
+    if (indexPath.section == 0 || indexPath.section == 2) {
         
         path = _remoteMovies[indexPath.row];
         
     } else {
         
         path = _localMovies[indexPath.row];
+    }
+    
+    if(indexPath.section == 2) //use KxMovieView
+    {
+        UIViewController * vc = [[UIViewController alloc] init];
+
+        UINavigationController *navController = [[UINavigationController alloc] initWithRootViewController:vc];
+        [navController.navigationBar.topItem setTitle:@"KxMovieView"];
+        
+        UIWindow* window = [UIApplication sharedApplication].keyWindow;
+        
+        window.rootViewController = navController;
+        
+        [window makeKeyAndVisible];
+    
+        NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+        parameters[KxMovieParameterMinBufferedDuration] = @(0.0f);
+        parameters[KxMovieParameterMaxBufferedDuration] = @(0.0f);
+        KxMovieView * videoView;
+        CGRect bounds = vc.view.bounds;
+        videoView = [KxMovieView movieViewControllerWithContentPath:path parameters:parameters withFrame:bounds];
+
+        [vc.view addSubview:videoView];
+        
+        //then, e.g.,  when you don't need it anymore:
+
+        //[videoView pause];
+        //[videoView viewWillDisappear:YES];
+        //[videoView removeFromSuperview];
+        
+        return;
     }
     
     // increase buffering for .wmv, it solves problem with delaying audio frames
