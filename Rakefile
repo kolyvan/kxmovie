@@ -1,3 +1,5 @@
+#Created by kolyvan_ru. @ https://github.com/kolyvan/kxmovie
+#Forked and modified by kinglonghuang @ https://github.com/kinglonghuang/kxmovie
 
 require "pathname"
 require "fileutils"
@@ -77,32 +79,30 @@ FFMPEG_BUILD_ARGS = [
 
 FFMPEG_LIBS = [
 'libavcodec',
+'libavdevice',
+'libavfilter',
 'libavformat',
 'libavutil',
-'libswscale',
+'libpostproc',
 'libswresample',
+'libswscale',
 ]
 
-def mkArgs(platformPath, sdkPath, platformArgs)
+def mkArgs(platformPath, sdkPath, platformArgs,prefixDir)
 	
 	cc = '--cc=' + XCODE_PATH + platformPath + GCC_PATH
 	as = "--as='" + 'gas-preprocessor.pl ' + XCODE_PATH + platformPath + GCC_PATH + "'"
 	sysroot = '--sysroot=' + XCODE_PATH + platformPath + sdkPath
 	extra = '--extra-ldflags=-L' + XCODE_PATH + platformPath + sdkPath + LIB_PATH
-
+	prefix = '--prefix=' + "#{prefixDir}"
 	args = FFMPEG_BUILD_ARGS + platformArgs
 	args << cc 
+	args << prefix
 	args << as
 	args << sysroot
 	args << extra
 	
 	args.join(' ')
-end
-
-def moveLibs(dest)
-	FFMPEG_LIBS.each do |x|
-		FileUtils.move Pathname.new("ffmpeg/#{x}/#{x}.a"), dest		
-	end
 end
 
 def ensureDir(path)
@@ -118,29 +118,29 @@ def ensureDir(path)
 end
 
 def buildArch(arch)
-
+	prefixDir = ensureDir(ENV['PWD'] + "/kxmovie/ffmpeg_" + arch)
+	
 	case arch
 	when 'i386'
-		args = mkArgs(PLATOFRM_PATH_SIM, SDK_PATH_SIM, FFMPEG_BUILD_ARGS_SIM)
+		args = mkArgs(PLATOFRM_PATH_SIM, SDK_PATH_SIM, FFMPEG_BUILD_ARGS_SIM, prefixDir)
 	when 'armv7'
-		args = mkArgs(PLATOFRM_PATH_IOS, SDK_PATH_IOS, FFMPEG_BUILD_ARGS_ARMV7)
+		args = mkArgs(PLATOFRM_PATH_IOS, SDK_PATH_IOS, FFMPEG_BUILD_ARGS_ARMV7, prefixDir)
 	when 'armv7s'
-		args = mkArgs(PLATOFRM_PATH_IOS, SDK_PATH_IOS, FFMPEG_BUILD_ARGS_ARMV7S)		
+		args = mkArgs(PLATOFRM_PATH_IOS, SDK_PATH_IOS, FFMPEG_BUILD_ARGS_ARMV7S, prefixDir)		
 	else
 		raise "Build failed: unknown arch: #{arch}"
 	end
 	
-	dest = ensureDir('ffmpeg/' + arch)
-	
 	system_or_exit "cd ffmpeg; ./configure #{args}"
 	system_or_exit "cd ffmpeg; make"	
-	moveLibs(dest)	
+	system_or_exit "cd ffmpeg; make install"
 	system_or_exit "cd ffmpeg; make clean"
+	system_or_exit "rm -r #{prefixDir}/lib/pkgconfig"
 
 end
 
-def mkLipoArgs(lib)
-	"-create -arch armv7 armv7/#{lib}.a -arch armv7 armv7s/#{lib}.a -arch i386 i386/#{lib}.a -output universal/#{lib}.a"
+def mkLipoArgs(lib, armv7Path, armv7sPath, i386Path, outputPath)
+	"-create -arch armv7 #{armv7Path}/#{lib}.a -arch armv7 #{armv7sPath}/#{lib}.a -arch i386 #{i386Path}/#{lib}.a -output #{outputPath}/#{lib}.a"
 end
 
 desc "check gas-preprocessor.pl"
@@ -162,11 +162,6 @@ task :check_gas_preprocessor do
 
 end
 
-desc "Clean ffmpeg"
-task :clean_ffmpeg do
-	system_or_exit "cd ffmpeg; make clean"
-end
-
 desc "Build ffmpeg i386 libs"
 task :build_ffmpeg_i386 do	
 	buildArch('i386')	
@@ -184,83 +179,21 @@ end
 
 desc "Build ffmpeg universal libs"
 task :build_ffmpeg_universal do	
+	ensureDir(ENV['PWD'] + "/kxmovie/ffmpeg_" + "universal")
+	cpySrc = ENV['PWD'] + "/kxmovie/ffmpeg_armv7/*"
+	cpyDest = ensureDir(ENV['PWD'] + "/kxmovie/ffmpeg_universal")	
+	system_or_exit "cp -r #{cpySrc} #{cpyDest}"
 
-	ensureDir('ffmpeg/universal')
-	
+	srddc = ENV['PWD'] + "/kxmovie/ffmpeg_armv7/lib"
+	armv7sPath = ENV['PWD']+"/kxmovie/ffmpeg_armv7s/lib"
+	i386Path = ENV['PWD']+"/kxmovie/ffmpeg_i386/lib"
+	universalLibPath = "#{cpyDest}/lib" 
 	FFMPEG_LIBS.each do |x|
-		args = mkLipoArgs(x)
-		system_or_exit "cd ffmpeg; lipo #{args}"
+		args = mkLipoArgs(x, srddc, armv7sPath, i386Path, universalLibPath)
+		system_or_exit "lipo #{args}"
 	end
-	
-	dest = ensureDir('libs')
-
-	FFMPEG_LIBS.each do |x|
-		FileUtils.move Pathname.new("ffmpeg/universal/#{x}.a"), dest
-	end
-
 end
-
-## build libkxmovie
-
-def cleanMovieLib(config)
-	buildDir = Pathname.new 'tmp/build'	
-  	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration #{config} -sdk iphoneos6.1 clean SYMROOT=#{buildDir}"
-	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration #{config} -sdk iphonesimulator6.1 clean SYMROOT=#{buildDir}"  	
-end
-
-desc "Clean libkxmovie-debug"
-task :clean_movie_debug do
-	cleanMovieLib 'Debug'
-end
-
-desc "Clean libkxmovie-release"
-task :clean_movie_release do
-	cleanMovieLib 'Release'
-end
-
-desc "Build libkxmovie-debug"
-task :build_movie_debug do
-	buildDir = Pathname.new 'tmp/build'
-	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Debug -sdk iphoneos6.1 build SYMROOT=#{buildDir} -arch armv7s"			
-	FileUtils.move Pathname.new('tmp/build/Debug-iphoneos/libkxmovie.a'), Pathname.new('tmp/build/Debug-iphoneos/libkxmovie_armv7s.a')	
-
-	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Debug -sdk iphoneos6.1 build SYMROOT=#{buildDir} -arch armv7"		
-	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Debug -sdk iphonesimulator6.1 build SYMROOT=#{buildDir}"	
-	system_or_exit "lipo -create -arch armv7 tmp/build/Debug-iphoneos/libkxmovie.a -arch armv7 tmp/build/Debug-iphoneos/libkxmovie_armv7s.a -arch i386 tmp/build/Debug-iphonesimulator/libkxmovie.a -output tmp/build/libkxmovie.a"
-end
-
-desc "Build libkxmovie-release"
-task :build_movie_release do
-	buildDir = Pathname.new 'tmp/build'
-	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Release -sdk iphoneos6.1 build SYMROOT=#{buildDir} -arch armv7s"	
-	FileUtils.move Pathname.new('tmp/build/Release-iphoneos/libkxmovie.a'), Pathname.new('tmp/build/Release-iphoneos/libkxmovie_armv7s.a')	
-
-	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Release -sdk iphoneos6.1 build SYMROOT=#{buildDir} -arch armv7"	
-	system_or_exit "xcodebuild -project kxmovie.xcodeproj -target kxmovie -configuration Debug -sdk iphonesimulator6.1 build SYMROOT=#{buildDir}"	
-	system_or_exit "lipo -create -arch armv7 tmp/build/Release-iphoneos/libkxmovie.a -arch armv7 tmp/build/Release-iphoneos/libkxmovie_armv7s.a -arch i386 tmp/build/Debug-iphonesimulator/libkxmovie.a -output tmp/build/libkxmovie.a"
-	
-	#FileUtils.copy Pathname.new('tmp/build/Release-iphoneos/libkxmovie.a'), buildDir
-end
-
-desc "Copy to output folder"
-task :copy_movie do	
-	dest = ensureDir 'output'	
-	FileUtils.move Pathname.new('tmp/build/libkxmovie.a'), dest		
-	FileUtils.copy Pathname.new('libs/libavcodec.a'), dest
-	FileUtils.copy Pathname.new('libs/libavformat.a'), dest
-	FileUtils.copy Pathname.new('libs/libavutil.a'), dest
-	FileUtils.copy Pathname.new('libs/libswscale.a'), dest
-	FileUtils.copy Pathname.new('libs/libswresample.a'), dest
-	FileUtils.copy Pathname.new('kxmovie/KxMovieViewController.h'), dest	
-	FileUtils.copy Pathname.new('kxmovie/KxAudioManager.h'), dest	
-	FileUtils.copy Pathname.new('kxmovie/KxMovieDecoder.h'), dest
-	FileUtils.copy_entry Pathname.new('kxmovie/kxmovie.bundle'), dest + 'kxmovie.bundle'
-end	
 
 ##
-task :clean => [:clean_movie_debug, :clean_movie_release, :clean_ffmpeg]
 task :build_ffmpeg => [:check_gas_preprocessor, :build_ffmpeg_i386, :build_ffmpeg_armv7, :build_ffmpeg_armv7s, :build_ffmpeg_universal]
-#task :build_movie => [:build_movie_debug, :copy_movie] 
-task :build_movie => [:build_movie_release, :copy_movie] 
-task :build_all => [:build_ffmpeg, :build_movie] 
-task :default => [:build_all]
+task :default => [:build_ffmpeg]
