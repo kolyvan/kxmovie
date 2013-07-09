@@ -1,4 +1,4 @@
-KxMovie--Modified by kinglonghuang,forked form http://twitter.com/kolyvan_ru
+KxMovie - movie player for iOS using ffmpeg (modified by kinglonghuang)
 ===========================================
 
 ### Build instructions:
