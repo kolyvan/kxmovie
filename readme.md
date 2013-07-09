@@ -1,5 +1,4 @@
-KxMovie<br>
-Modified by kinglonghuang,forked form http://twitter.com/kolyvan_ru
+KxMovie--Modified by kinglonghuang,forked form http://twitter.com/kolyvan_ru
 ===========================================
 
 ### Build instructions:
