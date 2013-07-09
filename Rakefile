@@ -1,5 +1,5 @@
 #Created by kolyvan_ru. @ https://github.com/kolyvan/kxmovie
-#Forked and modified by kinglonghuang @ https://github.com/kinglonghuang/kxmovie
+#Modified by kinglonghuang @ https://github.com/kinglonghuang/kxmovie
 
 require "pathname"
 require "fileutils"
