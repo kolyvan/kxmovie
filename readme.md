@@ -1,4 +1,4 @@
-KxMovie - movie player for iOS using ffmpeg
+KxMovie - Modified by kinglonghuang,forked form http://twitter.com/kolyvan_ru
 ===========================================
 
 ### Build instructions:
@@ -9,12 +9,19 @@ For this open console and type in
 	cd kxmovie
 	git submodule update --init	
 	rake
+Generally, rake will build the armv7,armv7s,i386,and the universal versions under the ./kvmovie folder, you can also using one of these cmds below to specify the architecture:
+0.rake 
+1.rake build_ffmpeg_i386
+2.rake build_ffmpeg_armv7
+3.rake build_ffmpeg_armv7s
 
 ### Usage
 
-1. Drop files from kxmovie/output folder in your project.
-2. Add frameworks: MediaPlayer, CoreAudio, AudioToolbox, Accelerate, QuartzCore, OpenGLES and libz.dylib .
-3. Add libs: libkxmovie.a, libavcodec.a, libavformat.a, libavutil.a, libswscale.a, libswresample.a
+1. Open the kxmovie.xcodeproj with Xcode and drop the kxmovie/ffmpeg_XX into your project.
+2. Set the “header search path” to your “ffmpeg_XX/include” folder, something like "$(SRCROOT)/kxmovie/ffmpeg_armv7/include"
+3. Command+B, enjoy yourself :)
+
+Note: If you want to build only the armv7 version, delete the armv7s item in the “Vaild Architectures” row, or delete the armv7 item if you want to build only a armv7 version
 
 For play movies:
 
