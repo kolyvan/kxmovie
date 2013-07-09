@@ -1,4 +1,5 @@
-KxMovie - Modified by kinglonghuang,forked form http://twitter.com/kolyvan_ru
+KxMovie<br>
+Modified by kinglonghuang,forked form http://twitter.com/kolyvan_ru
 ===========================================
 
 ### Build instructions:
@@ -8,12 +9,14 @@ For this open console and type in
 	
 	cd kxmovie
 	git submodule update --init	
-	rake
-Generally, rake will build the armv7,armv7s,i386,and the universal versions under the ./kvmovie folder, you can also using one of these cmds below to specify the architecture:
-0.rake 
-1.rake build_ffmpeg_i386
-2.rake build_ffmpeg_armv7
-3.rake build_ffmpeg_armv7s
+	rake 
+Generally, rake will build the armv7,armv7s,i386,and the universal versions under the ./kvmovie folder
+<br>you can also using one of these cmds below to specify the architecture:
+
+	rake 
+	rake build_ffmpeg_i386
+	rake build_ffmpeg_armv7
+	rake build_ffmpeg_armv7s
 
 ### Usage
 
@@ -49,3 +52,4 @@ at least iOS 5.1 and iPhone 3GS
 ### Feedback
 
 Tweet me — [@kolyvan_ru](http://twitter.com/kolyvan_ru).
+Email: kinglong_h@126.com
