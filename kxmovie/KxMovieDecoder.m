@@ -690,7 +690,9 @@ static int interrupt_callback(void *ctx);
 
 + (void)initialize
 {
-    av_register_all();   
+    av_log_set_callback(FFLog);
+    av_register_all();
+    avformat_network_init();
 }
 
 + (id) movieDecoderWithContentPath: (NSString *) path
