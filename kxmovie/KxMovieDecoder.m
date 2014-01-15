@@ -690,7 +690,8 @@ static int interrupt_callback(void *ctx);
 
 + (void)initialize
 {
-    av_log_set_callback(FFLog);
+    // TODO: implement our own logger.
+    //av_log_set_callback(FFLog);
     av_register_all();
     avformat_network_init();
 }
