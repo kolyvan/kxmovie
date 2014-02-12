@@ -489,6 +489,7 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				USER_HEADER_SEARCH_PATHS = ffmpeg;
+				VALID_ARCHS = "arm64 i386 armv7s";
 			};
 			name = Debug;
 		};
@@ -524,6 +525,7 @@
 				SKIP_INSTALL = YES;
 				USER_HEADER_SEARCH_PATHS = ffmpeg;
 				VALIDATE_PRODUCT = YES;
+				VALID_ARCHS = "arm64 i386 armv7s";
 			};
 			name = Release;
 		};
