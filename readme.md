@@ -38,6 +38,8 @@ at least iOS 5.1 and iPhone 3GS
 ![movie view](https://raw.github.com/atelierdumobile/FFmpegPlayer-iOS/master/readme-media/screenshot-movie.png "Movie View")
 ![info view](https://raw.github.com/atelierdumobile/FFmpegPlayer-iOS/master/readme-media/screenshot-info.png "Info View")
 
+![info view](https://raw.github.com/atelierdumobile/FFmpegPlayer-iOS/master/readme-media/screenshot-info-landscape.png "Info View")
+
 ### Feedback
 
 Tweet me — [@kolyvan_ru](http://twitter.com/kolyvan_ru).
