@@ -227,7 +227,7 @@ task :build_ffmpeg_universal do
 		system_or_exit "cd FFmpeg; lipo #{args}"
 	end
 	
-	dest = ensureDir('libs')
+	dest = ensureDir('libs/FFmpeg/')
 
 	FFMPEG_LIBS.each do |x|
 		FileUtils.move Pathname.new("FFmpeg/universal/#{x}.a"), dest
@@ -281,11 +281,11 @@ desc "Copy to output folder"
 task :copy_movie do	
 	dest = ensureDir 'output'	
 	FileUtils.move Pathname.new('tmp/build/libkxmovie.a'), dest		
-	FileUtils.copy Pathname.new('libs/libavcodec.a'), dest
-	FileUtils.copy Pathname.new('libs/libavformat.a'), dest
-	FileUtils.copy Pathname.new('libs/libavutil.a'), dest
-	FileUtils.copy Pathname.new('libs/libswscale.a'), dest
-	FileUtils.copy Pathname.new('libs/libswresample.a'), dest
+	FileUtils.copy Pathname.new('libs/FFmpeg/libavcodec.a'), dest
+	FileUtils.copy Pathname.new('libs/FFmpeg/libavformat.a'), dest
+	FileUtils.copy Pathname.new('libs/FFmpeg/libavutil.a'), dest
+	FileUtils.copy Pathname.new('libs/FFmpeg/libswscale.a'), dest
+	FileUtils.copy Pathname.new('libs/FFmpeg/libswresample.a'), dest
 	FileUtils.copy Pathname.new('kxmovie/KxMovieViewController.h'), dest	
 	FileUtils.copy Pathname.new('kxmovie/KxAudioManager.h'), dest	
 	FileUtils.copy Pathname.new('kxmovie/KxMovieDecoder.h'), dest
