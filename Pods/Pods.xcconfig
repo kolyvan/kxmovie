@@ -1,0 +1,5 @@
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) COCOAPODS=1 ${inherited} NSLOGGER_BUILD_USERNAME="${USER}"
+HEADER_SEARCH_PATHS = "${PODS_ROOT}/Headers" "${PODS_ROOT}/Headers/NSLogger"
+OTHER_CFLAGS = $(inherited) -isystem "${PODS_ROOT}/Headers" -isystem "${PODS_ROOT}/Headers/NSLogger"
+OTHER_LDFLAGS = -ObjC -framework CFNetwork -framework SystemConfiguration
+PODS_ROOT = ${SRCROOT}/Pods

@@ -231,7 +231,7 @@
     [self presentViewController:vc animated:YES completion:nil];
     //[self.navigationController pushViewController:vc animated:YES];    
 
-    NSLog(@"Playing a movie: %@", path);
+    LoggerApp(1, @"Playing a movie: %@", path);
 }
 
 @end

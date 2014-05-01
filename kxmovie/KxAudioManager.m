@@ -17,6 +17,7 @@
 #import "TargetConditionals.h"
 #import <AudioToolbox/AudioToolbox.h>
 #import <Accelerate/Accelerate.h>
+#import "KxLogger.h"
 
 #define MAX_FRAME_SIZE 4096
 #define MAX_CHAN       2
@@ -110,7 +111,7 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
         } \
         [dump appendFormat:@"\n"]; \
     } \
-    NSLog(@"%@", dump); \
+    LoggerAudio(3, @"%@", dump); \
 }
 
 #define dumpAudioSamplesNonInterleaved(prefix, dataBuffer, samplePrintFormat, sampleCount, channelCount) \
@@ -124,7 +125,7 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
         } \
         [dump appendFormat:@"\n"]; \
     } \
-    NSLog(@"%@", dump); \
+    LoggerAudio(3, @"%@", dump); \
 }
 
 - (BOOL) checkAudioRoute
@@ -139,7 +140,7 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
         return NO;
     
     _audioRoute = CFBridgingRelease(route);
-    NSLog(@"AudioRoute: %@", _audioRoute);        
+    LoggerAudio(1, @"AudioRoute: %@", _audioRoute);
     return YES;
 }
 
@@ -236,8 +237,8 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
     _numBytesPerSample = _outputFormat.mBitsPerChannel / 8;
     _numOutputChannels = _outputFormat.mChannelsPerFrame;
     
-    NSLog(@"Current output bytes per sample: %ld", _numBytesPerSample);
-    NSLog(@"Current output num channels: %ld", _numOutputChannels);
+    LoggerAudio(2, @"Current output bytes per sample: %ld", _numBytesPerSample);
+    LoggerAudio(2, @"Current output num channels: %ld", _numOutputChannels);
             
     // Slap a render callback on the unit
     AURenderCallbackStruct callbackStruct;
@@ -273,7 +274,7 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
                    "Checking number of output channels"))
         return NO;
     
-    NSLog(@"We've got %lu output channels", newNumChannels);
+    LoggerAudio(2, @"We've got %lu output channels", newNumChannels);
     
     // Get the hardware sampling rate. This is settable, but here we're only reading.
     size = sizeof(_samplingRate);
@@ -284,7 +285,7 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
         
         return NO;
     
-    NSLog(@"Current sampling rate: %f", _samplingRate);
+    LoggerAudio(2, @"Current sampling rate: %f", _samplingRate);
     
     size = sizeof(_outputVolume);
     if (checkError(AudioSessionGetProperty(kAudioSessionProperty_CurrentHardwareOutputVolume,
@@ -293,7 +294,7 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
                    "Checking current hardware output volume"))
         return NO;
     
-    NSLog(@"Current output volume: %f", _outputVolume);    
+    LoggerAudio(1, @"Current output volume: %f", _outputVolume);
     
     return YES;	
 }
@@ -331,8 +332,8 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
 
             float scale = (float)INT16_MAX;
             vDSP_vsmul(_outData, 1, &scale, _outData, 1, numFrames*_numOutputChannels);
-            NSLog(@"Buffer %u - Output Channels %u - Samples %u",
-                  (uint)ioData->mNumberBuffers, (uint)ioData->mBuffers[0].mNumberChannels, (uint)numFrames);
+            LoggerAudio(2, @"Buffer %u - Output Channels %u - Samples %u",
+                          (uint)ioData->mNumberBuffers, (uint)ioData->mBuffers[0].mNumberChannels, (uint)numFrames);
 
             for (int iBuffer=0; iBuffer < ioData->mNumberBuffers; ++iBuffer) {
                 
@@ -476,13 +477,13 @@ static void sessionInterruptionListener(void *inClientData, UInt32 inInterruptio
     
 	if (inInterruption == kAudioSessionBeginInterruption) {
         
-		NSLog(@"Begin interuption");
+		LoggerAudio(2, @"Begin interuption");
         sm.playAfterSessionEndInterruption = sm.playing;
         [sm pause];
                 
 	} else if (inInterruption == kAudioSessionEndInterruption) {
 		
-        NSLog(@"End interuption");
+        LoggerAudio(2, @"End interuption");
         if (sm.playAfterSessionEndInterruption) {
             sm.playAfterSessionEndInterruption = NO;
             [sm play];
@@ -516,7 +517,7 @@ static BOOL checkError(OSStatus error, const char *operation)
 		// no, format it as an integer
 		sprintf(str, "%d", (int)error);
     
-	fprintf(stderr, "Error: %s (%s)\n", operation, str);
+	LoggerStream(0, @"Error: %s (%s)\n", operation, str);
     
 	//exit(1);
     

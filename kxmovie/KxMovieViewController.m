@@ -15,6 +15,7 @@
 #import "KxMovieDecoder.h"
 #import "KxAudioManager.h"
 #import "KxMovieGLView.h"
+#import "KxLogger.h"
 
 NSString * const KxMovieParameterMinBufferedDuration = @"KxMovieParameterMinBufferedDuration";
 NSString * const KxMovieParameterMaxBufferedDuration = @"KxMovieParameterMaxBufferedDuration";
@@ -211,16 +212,17 @@ static NSMutableDictionary * gHistory;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     
     if (_dispatchQueue) {
-        dispatch_release(_dispatchQueue);
+        // Not needed as of ARC.
+//        dispatch_release(_dispatchQueue);
         _dispatchQueue = NULL;
     }
     
-    NSLog(@"%@ dealloc", self);
+    LoggerStream(1, @"%@ dealloc", self);
 }
 
 - (void)loadView
 {
-    // NSLog(@"loadView");
+    // LoggerStream(1, @"loadView");
     
     CGRect bounds = [[UIScreen mainScreen] applicationFrame];
     
@@ -411,7 +413,7 @@ static NSMutableDictionary * gHistory;
             _minBufferedDuration = _maxBufferedDuration = 0;
             [self play];
             
-            NSLog(@"didReceiveMemoryWarning, disable buffering and continue playing");
+            LoggerStream(0, @"didReceiveMemoryWarning, disable buffering and continue playing");
             
         } else {
             
@@ -436,7 +438,7 @@ static NSMutableDictionary * gHistory;
 
 - (void) viewDidAppear:(BOOL)animated
 {
-    // NSLog(@"viewDidAppear");
+    // LoggerStream(1, @"viewDidAppear");
     
     [super viewDidAppear:animated];
         
@@ -494,7 +496,7 @@ static NSMutableDictionary * gHistory;
     _buffered = NO;
     _interrupted = YES;
     
-    NSLog(@"viewWillDisappear %@", self);
+    LoggerStream(1, @"viewWillDisappear %@", self);
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
@@ -507,7 +509,7 @@ static NSMutableDictionary * gHistory;
     [self showHUD:YES];
     [self pause];
     
-    NSLog(@"applicationWillResignActive");    
+    LoggerStream(1, @"applicationWillResignActive");
 }
 
 #pragma mark - gesture recognizer
@@ -546,7 +548,7 @@ static NSMutableDictionary * gHistory;
             const CGFloat ff = pt.x > 0 ? 1.0 : -1.0;            
             [self setMoviePosition: _moviePosition + ff * MIN(sc, 600.0)];
         }
-        //NSLog(@"pan %.2f %.2f %.2f sec", pt.x, vt.x, sc);
+        //LoggerStream(2, @"pan %.2f %.2f %.2f sec", pt.x, vt.x, sc);
     }
 }
 
@@ -587,7 +589,7 @@ static NSMutableDictionary * gHistory;
     if (_decoder.validAudio)
         [self enableAudio:YES];
 
-    NSLog(@"play movie");    
+    LoggerStream(1, @"play movie");
 }
 
 - (void) pause
@@ -599,7 +601,7 @@ static NSMutableDictionary * gHistory;
     //_interrupted = YES;
     [self enableAudio:NO];
     [self updatePlayButton];
-    NSLog(@"pause movie");
+    LoggerStream(1, @"pause movie");
 }
 
 - (void) setMoviePosition: (CGFloat) position
@@ -662,7 +664,7 @@ static NSMutableDictionary * gHistory;
 - (void) setMovieDecoder: (KxMovieDecoder *) decoder
                withError: (NSError *) error
 {
-    NSLog(@"setMovieDecoder");
+    LoggerStream(2, @"setMovieDecoder");
             
     if (!error && decoder) {
         
@@ -710,7 +712,7 @@ static NSMutableDictionary * gHistory;
                 _maxBufferedDuration = _minBufferedDuration * 2;
         }
         
-        NSLog(@"buffered limit: %.1f - %.1f", _minBufferedDuration, _maxBufferedDuration);
+        LoggerStream(2, @"buffered limit: %.1f - %.1f", _minBufferedDuration, _maxBufferedDuration);
         
         if (self.isViewLoaded) {
             
@@ -760,7 +762,7 @@ static NSMutableDictionary * gHistory;
     
     if (!_glView) {
         
-        NSLog(@"fallback to use RGB video frame and UIKit");
+        LoggerVideo(0, @"fallback to use RGB video frame and UIKit");
         [_decoder setupVideoFrameFormat:KxVideoFrameFormatRGB];
         _imageView = [[UIImageView alloc] initWithFrame:bounds];
     }
@@ -886,7 +888,7 @@ static NSMutableDictionary * gHistory;
                                 
                                 memset(outData, 0, numFrames * numChannels * sizeof(float));
 #ifdef DEBUG
-                                NSLog(@"desync audio (outrun) wait %.4f %.4f", _moviePosition, frame.position);
+                                LoggerStream(0, @"desync audio (outrun) wait %.4f %.4f", _moviePosition, frame.position);
                                 _debugAudioStatus = 1;
                                 _debugAudioStatusTS = [NSDate date];
 #endif
@@ -898,7 +900,7 @@ static NSMutableDictionary * gHistory;
                             if (delta > 2.0 && count > 1) {
                                 
 #ifdef DEBUG
-                                NSLog(@"desync audio (lags) skip %.4f %.4f", _moviePosition, frame.position);
+                                LoggerStream(0, @"desync audio (lags) skip %.4f %.4f", _moviePosition, frame.position);
                                 _debugAudioStatus = 2;
                                 _debugAudioStatusTS = [NSDate date];
 #endif
@@ -938,7 +940,7 @@ static NSMutableDictionary * gHistory;
             } else {
                 
                 memset(outData, 0, numFrames * numChannels * sizeof(float));
-                //NSLog(@"silence audio");
+                //LoggerStream(1, @"silence audio");
 #ifdef DEBUG
                 _debugAudioStatus = 3;
                 _debugAudioStatusTS = [NSDate date];
@@ -962,10 +964,10 @@ static NSMutableDictionary * gHistory;
         
         [audioManager play];
         
-        NSLog(@"audio device smr: %d fmt: %d chn: %d",
-              (int)audioManager.samplingRate,
-              (int)audioManager.numBytesPerSample,
-              (int)audioManager.numOutputChannels);
+        LoggerAudio(2, @"audio device smr: %d fmt: %d chn: %d",
+                    (int)audioManager.samplingRate,
+                    (int)audioManager.numBytesPerSample,
+                    (int)audioManager.numOutputChannels);
         
     } else {
         
@@ -1161,11 +1163,11 @@ static NSMutableDictionary * gHistory;
     NSTimeInterval correction = dPosition - dTime;
     
     //if ((_tickCounter % 200) == 0)
-    //    NSLog(@"tick correction %.4f", correction);
+    //    LoggerStream(1, @"tick correction %.4f", correction);
     
     if (correction > 1.f || correction < -1.f) {
         
-        NSLog(@"tick correction reset %.2f", correction);
+        LoggerStream(1, @"tick correction reset %.2f", correction);
         correction = 0;
         _tickCorrectionTime = 0;
     }

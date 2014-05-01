@@ -16,6 +16,7 @@
 #include "libswresample/swresample.h"
 #include "libavutil/pixdesc.h"
 #import "KxAudioManager.h"
+#import "KxLogger.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 NSString * kxmovieErrorDomain = @"ru.kolyvan.kxmovie";
@@ -224,7 +225,7 @@ static void avStreamFPSTimeBase(AVStream *st, CGFloat defaultTimeBase, CGFloat *
         timebase = defaultTimeBase;
         
     if (st->codec->ticks_per_frame != 1) {
-        NSLog(@"WARNING: st.codec.ticks_per_frame=%d", st->codec->ticks_per_frame);
+        LoggerStream(0, @"WARNING: st.codec.ticks_per_frame=%d", st->codec->ticks_per_frame);
         //timebase *= st->codec->ticks_per_frame;
     }
          
@@ -512,7 +513,7 @@ static int interrupt_callback(void *ctx);
     [self closeAudioStream];
     kxMovieError errCode = [self openAudioStream: audioStream];
     if (kxMovieErrorNone != errCode) {
-        NSLog(@"%@", errorMessage(errCode));
+        LoggerAudio(0, @"%@", errorMessage(errCode));
     }
 }
 
@@ -536,7 +537,7 @@ static int interrupt_callback(void *ctx);
         NSInteger subtitleStream = [_subtitleStreams[selected] integerValue];
         kxMovieError errCode = [self openSubtitleStream:subtitleStream];
         if (kxMovieErrorNone != errCode) {
-            NSLog(@"%@", errorMessage(errCode));
+            LoggerStream(0, @"%@", errorMessage(errCode));
         }
     }
 }
@@ -708,7 +709,7 @@ static int interrupt_callback(void *ctx);
 
 - (void) dealloc
 {
-    NSLog(@"%@ dealloc", self);
+    LoggerStream(2, @"%@ dealloc", self);
     [self closeFile];
 }
 
@@ -755,7 +756,7 @@ static int interrupt_callback(void *ctx);
         
         [self closeFile];
         NSString *errMsg = errorMessage(errCode);
-        NSLog(@"%@, %@", errMsg, path.lastPathComponent);
+        LoggerStream(0, @"%@, %@", errMsg, path.lastPathComponent);
         if (perror)
             *perror = kxmovieError(errCode, errMsg);
         return NO;
@@ -856,14 +857,14 @@ static int interrupt_callback(void *ctx);
     AVStream *st = _formatCtx->streams[_videoStream];
     avStreamFPSTimeBase(st, 0.04, &_fps, &_videoTimeBase);
     
-    NSLog(@"video codec size: %d:%d fps: %.3f tb: %f",
-          self.frameWidth,
-          self.frameHeight,
-          _fps,
-          _videoTimeBase);
+    LoggerVideo(1, @"video codec size: %d:%d fps: %.3f tb: %f",
+                self.frameWidth,
+                self.frameHeight,
+                _fps,
+                _videoTimeBase);
     
-    NSLog(@"video start time %f", st->start_time * _videoTimeBase);
-    NSLog(@"video disposition %d", st->disposition);
+    LoggerVideo(1, @"video start time %f", st->start_time * _videoTimeBase);
+    LoggerVideo(1, @"video disposition %d", st->disposition);
     
     return kxMovieErrorNone;
 }
@@ -934,12 +935,12 @@ static int interrupt_callback(void *ctx);
     AVStream *st = _formatCtx->streams[_audioStream];
     avStreamFPSTimeBase(st, 0.025, 0, &_audioTimeBase);
     
-    NSLog(@"audio codec smr: %.d fmt: %d chn: %d tb: %f %@",
-          _audioCodecCtx->sample_rate,
-          _audioCodecCtx->sample_fmt,
-          _audioCodecCtx->channels,
-          _audioTimeBase,          
-          _swrContext ? @"resample" : @"");
+    LoggerAudio(1, @"audio codec smr: %.d fmt: %d chn: %d tb: %f %@",
+                _audioCodecCtx->sample_rate,
+                _audioCodecCtx->sample_fmt,
+                _audioCodecCtx->channels,
+                _audioTimeBase,
+                _swrContext ? @"resample" : @"");
     
     return kxMovieErrorNone; 
 }
@@ -964,10 +965,10 @@ static int interrupt_callback(void *ctx);
     _subtitleStream = subtitleStream;
     _subtitleCodecCtx = codecCtx;
     
-    NSLog(@"subtitle codec: '%s' mode: %d enc: %s",
-          codecDesc->name,
-          codecCtx->sub_charenc_mode,
-          codecCtx->sub_charenc);
+    LoggerStream(1, @"subtitle codec: '%s' mode: %d enc: %s",
+                codecDesc->name,
+                codecCtx->sub_charenc_mode,
+                codecCtx->sub_charenc);
     
     _subtitleASSEvents = -1;
     
@@ -982,7 +983,7 @@ static int interrupt_callback(void *ctx);
             NSArray *fields = [KxMovieSubtitleASSParser parseEvents:s];
             if (fields.count && [fields.lastObject isEqualToString:@"Text"]) {
                 _subtitleASSEvents = fields.count;
-                NSLog(@"subtitle ass events: %@", [fields componentsJoinedByString:@","]);
+                LoggerStream(2, @"subtitle ass events: %@", [fields componentsJoinedByString:@","]);
             }
         }
     }
@@ -1141,7 +1142,7 @@ static int interrupt_callback(void *ctx);
         if (!_swsContext &&
             ![self setupScaler]) {
             
-            NSLog(@"fail setup video scaler");
+            LoggerVideo(0, @"fail setup video scaler");
             return nil;
         }
         
@@ -1173,7 +1174,7 @@ static int interrupt_callback(void *ctx);
         frame.duration += _videoFrame->repeat_pict * _videoTimeBase * 0.5;
         
         //if (_videoFrame->repeat_pict > 0) {
-        //    NSLog(@"_videoFrame.repeat_pict %d", _videoFrame->repeat_pict);
+        //    LoggerVideo(0, @"_videoFrame.repeat_pict %d", _videoFrame->repeat_pict);
         //}
         
     } else {
@@ -1184,10 +1185,10 @@ static int interrupt_callback(void *ctx);
     }    
     
 #if 0
-    NSLog(@"VFD: %.4f %.4f | %lld ",
-          frame.position,
-          frame.duration,
-          av_frame_get_pkt_pos(_videoFrame));
+    LoggerVideo(2, @"VFD: %.4f %.4f | %lld ",
+                frame.position,
+                frame.duration,
+                av_frame_get_pkt_pos(_videoFrame));
 #endif
     
     return frame;
@@ -1230,13 +1231,13 @@ static int interrupt_callback(void *ctx);
                                 _audioFrame->nb_samples);
         
         if (numFrames < 0) {
-            NSLog(@"fail resample audio");
+            LoggerAudio(0, @"fail resample audio");
             return nil;
         }
         
         //int64_t delay = swr_get_delay(_swrContext, audioManager.samplingRate);
         //if (delay > 0)
-        //    NSLog(@"resample delay %lld", delay);
+        //    LoggerAudio(0, @"resample delay %lld", delay);
         
         audioData = _swrBuffer;
         
@@ -1271,10 +1272,10 @@ static int interrupt_callback(void *ctx);
     }
     
 #if 0
-    NSLog(@"AFD: %.4f %.4f | %.4f ",
-          frame.position,
-          frame.duration,
-          frame.samples.length / (8.0 * 44100.0));
+    LoggerAudio(2, @"AFD: %.4f %.4f | %.4f ",
+                frame.position,
+                frame.duration,
+                frame.samples.length / (8.0 * 44100.0));
 #endif
     
     return frame;
@@ -1319,7 +1320,7 @@ static int interrupt_callback(void *ctx);
     frame.duration = (CGFloat)(pSubtitle->end_display_time - pSubtitle->start_display_time) / 1000.f;
     
 #if 0
-    NSLog(@"SUB: %.4f %.4f | %@",
+    LoggerStream(2, @"SUB: %.4f %.4f | %@",
           frame.position,
           frame.duration,
           frame.text);
@@ -1385,7 +1386,7 @@ static int interrupt_callback(void *ctx);
                                                 &packet);
                 
                 if (len < 0) {
-                    NSLog(@"decode video error, skip packet");
+                    LoggerVideo(0, @"decode video error, skip packet");
                     break;
                 }
                 
@@ -1432,7 +1433,7 @@ static int interrupt_callback(void *ctx);
                                                 &packet);
                 
                 if (len < 0) {
-                    NSLog(@"decode audio error, skip packet");
+                    LoggerAudio(0, @"decode audio error, skip packet");
                     break;
                 }
                 
@@ -1482,7 +1483,7 @@ static int interrupt_callback(void *ctx);
                                                   &packet);
                 
                 if (len < 0) {
-                    NSLog(@"decode subtitle error, skip packet");
+                    LoggerStream(0, @"decode subtitle error, skip packet");
                     break;
                 }
                 
@@ -1519,7 +1520,7 @@ static int interrupt_callback(void *ctx)
         return 0;
     __unsafe_unretained KxMovieDecoder *p = (__bridge KxMovieDecoder *)ctx;
     const BOOL r = [p interruptDecoder];
-    if (r) NSLog(@"DEBUG: INTERRUPT_CALLBACK!");
+    if (r) LoggerStream(1, @"DEBUG: INTERRUPT_CALLBACK!");
     return r;
 }
 
