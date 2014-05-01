@@ -69,6 +69,14 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+
+//    [self performSelector:@selector(launchDebugTest) withObject:nil afterDelay:0.5];
+}
+
+- (void)launchDebugTest
+{
+    [self tableView:self.tableView didSelectRowAtIndexPath:[NSIndexPath indexPathForRow:1
+                                                                              inSection:1]];
 }
 
 - (void)didReceiveMemoryWarning
@@ -222,6 +230,8 @@
                                                                                parameters:parameters];
     [self presentViewController:vc animated:YES completion:nil];
     //[self.navigationController pushViewController:vc animated:YES];    
+
+    NSLog(@"Playing a movie: %@", path);
 }
 
 @end
