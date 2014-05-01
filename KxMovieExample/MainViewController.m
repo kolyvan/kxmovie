@@ -30,8 +30,8 @@
         
         _remoteMovies = @[
 
-            @"http://eric.cast.ro/stream2.flv",
-            @"http://liveipad.wasu.cn/cctv2_ipad/z.m3u8",                          
+//            @"http://eric.cast.ro/stream2.flv",
+//            @"http://liveipad.wasu.cn/cctv2_ipad/z.m3u8",
             @"http://www.wowza.com/_h264/BigBuckBunny_175k.mov",
             // @"http://www.wowza.com/_h264/BigBuckBunny_115k.mov",
             @"rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov",
@@ -41,9 +41,9 @@
             //@"rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov",
             //@"http://santai.tv/vod/test/BigBuckBunny_175k.mov",
         
-            @"rtmp://aragontvlivefs.fplive.net/aragontvlive-live/stream_normal_abt",
-            @"rtmp://ucaster.eu:1935/live/_definst_/discoverylacajatv",
-            @"rtmp://edge01.fms.dutchview.nl/botr/bunny.flv"
+//            @"rtmp://aragontvlivefs.fplive.net/aragontvlive-live/stream_normal_abt",
+//            @"rtmp://ucaster.eu:1935/live/_definst_/discoverylacajatv",
+//            @"rtmp://edge01.fms.dutchview.nl/botr/bunny.flv"
         ];
         
     }
@@ -144,6 +144,15 @@
             }
         }
     }
+
+    // Add all the movies present in the app bundle.
+    NSBundle *bundle = [NSBundle mainBundle];
+    [ma addObjectsFromArray:[bundle pathsForResourcesOfType:@"mp4" inDirectory:@"SampleMovies"]];
+    [ma addObjectsFromArray:[bundle pathsForResourcesOfType:@"mov" inDirectory:@"SampleMovies"]];
+    [ma addObjectsFromArray:[bundle pathsForResourcesOfType:@"m4v" inDirectory:@"SampleMovies"]];
+    [ma addObjectsFromArray:[bundle pathsForResourcesOfType:@"wav" inDirectory:@"SampleMovies"]];
+
+    [ma sortedArrayUsingSelector:@selector(compare:)];
     
     _localMovies = [ma copy];
 }
