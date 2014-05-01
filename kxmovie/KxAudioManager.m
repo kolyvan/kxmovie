@@ -94,6 +94,36 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
 
 #pragma mark - private
 
+// Debug: dump the current frame data. Limited to 20 samples.
+
+#define dumpAudioSamples(prefix, dataBuffer, samplePrintFormat, sampleCount, channelCount) \
+{ \
+    NSMutableString *dump = [NSMutableString stringWithFormat:prefix]; \
+    for (int i = 0; i < MIN(20, sampleCount); i++) \
+    { \
+        for (int j = 0; j < channelCount; j++) \
+        { \
+            [dump appendFormat:samplePrintFormat, dataBuffer[j + i * channelCount]]; \
+        } \
+        [dump appendFormat:@"\n"]; \
+    } \
+    NSLog(@"%@", dump); \
+}
+
+#define dumpAudioSamplesNonInterleaved(prefix, dataBuffer, samplePrintFormat, sampleCount, channelCount) \
+{ \
+    NSMutableString *dump = [NSMutableString stringWithFormat:prefix]; \
+    for (int i = 0; i < MIN(20, sampleCount); i++) \
+    { \
+        for (int j = 0; j < channelCount; j++) \
+        { \
+            [dump appendFormat:samplePrintFormat, dataBuffer[j][i]]; \
+        } \
+        [dump appendFormat:@"\n"]; \
+    } \
+    NSLog(@"%@", dump); \
+}
+
 - (BOOL) checkAudioRoute
 {
     // Check what the audio route is.
@@ -293,9 +323,14 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
         }
         else if (_numBytesPerSample == 2) // then we need to convert SInt16 -> Float (and also scale)
         {
+//            dumpAudioSamples(@"Audio frames decoded by FFmpeg:\n",
+//                             _outData, @"% 12.4f ", numFrames, _numOutputChannels);
+
             float scale = (float)INT16_MAX;
             vDSP_vsmul(_outData, 1, &scale, _outData, 1, numFrames*_numOutputChannels);
-            
+            NSLog(@"Buffer %u - Output Channels %u - Samples %u",
+                  (uint)ioData->mNumberBuffers, (uint)ioData->mBuffers[0].mNumberChannels, (uint)numFrames);
+
             for (int iBuffer=0; iBuffer < ioData->mNumberBuffers; ++iBuffer) {
                 
                 int thisNumChannels = ioData->mBuffers[iBuffer].mNumberChannels;
@@ -303,6 +338,9 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
                 for (int iChannel = 0; iChannel < thisNumChannels; ++iChannel) {
                     vDSP_vfix16(_outData+iChannel, _numOutputChannels, (SInt16 *)ioData->mBuffers[iBuffer].mData+iChannel, thisNumChannels, numFrames);
                 }
+
+//                dumpAudioSamples(@"Dump =\n", ((SInt16 *)ioData->mBuffers[iBuffer].mData),
+//                                 @"% 8d ", numFrames, thisNumChannels);
             }
             
         }        
