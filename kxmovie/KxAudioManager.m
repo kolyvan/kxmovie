@@ -18,6 +18,9 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import <Accelerate/Accelerate.h>
 
+#define MAX_FRAME_SIZE 4096
+#define MAX_CHAN       2
+
 static BOOL checkError(OSStatus error, const char *operation);
 static void sessionPropertyListener(void *inClientData, AudioSessionPropertyID inID, UInt32 inDataSize, const void *inData);
 static void sessionInterruptionListener(void *inClientData, UInt32 inInterruption);
@@ -77,7 +80,7 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
     self = [super init];
 	if (self) {
         
-        _outData = (float *)calloc(8192, sizeof(float));
+        _outData = (float *)calloc(MAX_FRAME_SIZE*MAX_CHAN, sizeof(float));
         _outputVolume = 0.5;        
 	}	
 	return self;
