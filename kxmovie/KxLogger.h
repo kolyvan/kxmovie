@@ -9,6 +9,8 @@
 #ifndef kxmovie_KxLogger_h
 #define kxmovie_KxLogger_h
 
+//#define DUMP_AUDIO_DATA
+
 #ifdef DEBUG
 #ifdef USE_NSLOGGER
 

@@ -332,8 +332,11 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
 
             float scale = (float)INT16_MAX;
             vDSP_vsmul(_outData, 1, &scale, _outData, 1, numFrames*_numOutputChannels);
+            
+#ifdef DUMP_AUDIO_DATA
             LoggerAudio(2, @"Buffer %u - Output Channels %u - Samples %u",
                           (uint)ioData->mNumberBuffers, (uint)ioData->mBuffers[0].mNumberChannels, (uint)numFrames);
+#endif
 
             for (int iBuffer=0; iBuffer < ioData->mNumberBuffers; ++iBuffer) {
                 
@@ -342,9 +345,11 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
                 for (int iChannel = 0; iChannel < thisNumChannels; ++iChannel) {
                     vDSP_vfix16(_outData+iChannel, _numOutputChannels, (SInt16 *)ioData->mBuffers[iBuffer].mData+iChannel, thisNumChannels, numFrames);
                 }
-
-//                dumpAudioSamples(@"Dump =\n", ((SInt16 *)ioData->mBuffers[iBuffer].mData),
-//                                 @"% 8d ", numFrames, thisNumChannels);
+#ifdef DUMP_AUDIO_DATA
+                dumpAudioSamples(@"Audio frames decoded by FFmpeg and reformatted:\n",
+                                 ((SInt16 *)ioData->mBuffers[iBuffer].mData),
+                                 @"% 8d ", numFrames, thisNumChannels);
+#endif
             }
             
         }        

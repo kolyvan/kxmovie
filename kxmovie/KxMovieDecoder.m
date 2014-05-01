@@ -20,6 +20,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 NSString * kxmovieErrorDomain = @"ru.kolyvan.kxmovie";
+static void FFLog(void* context, int level, const char* format, va_list args);
 
 static NSError * kxmovieError (NSInteger code, id info)
 {
@@ -691,8 +692,7 @@ static int interrupt_callback(void *ctx);
 
 + (void)initialize
 {
-    // TODO: implement our own logger.
-    //av_log_set_callback(FFLog);
+    av_log_set_callback(FFLog);
     av_register_all();
     avformat_network_init();
 }
@@ -1622,3 +1622,27 @@ static int interrupt_callback(void *ctx)
 }
 
 @end
+
+static void FFLog(void* context, int level, const char* format, va_list args) {
+    @autoreleasepool {
+        //Trim time at the beginning and new line at the end
+        NSString* message = [[NSString alloc] initWithFormat: [NSString stringWithUTF8String: format] arguments: args];
+        switch (level) {
+            case 0:
+            case 1:
+                LoggerStream(0, @"%@", [message stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]]);
+                break;
+            case 2:
+                LoggerStream(1, @"%@", [message stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]]);
+                break;
+            case 3:
+            case 4:
+                LoggerStream(2, @"%@", [message stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]]);
+                break;
+            default:
+                LoggerStream(3, @"%@", [message stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]]);
+                break;
+        }
+    }
+}
+
