@@ -25,7 +25,7 @@
 {
     self = [super init];
     if (self) {
-        self.title = @"Movies";
+        self.title = @"FFmpegPlayer";
         self.tabBarItem = [[UITabBarItem alloc] initWithTabBarSystemItem:UITabBarSystemItemFeatured tag: 0];
         
         _remoteMovies = @[

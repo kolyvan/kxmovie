@@ -16,15 +16,11 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    UIViewController *vc = [[MainViewController alloc] init];
+    UINavigationController *navVc = [[UINavigationController alloc] initWithRootViewController:vc];
+
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-        
-    UIViewController * vc = [[MainViewController alloc] init];
-    UITabBarController *tabBarController = [[UITabBarController alloc] init];
-    tabBarController.viewControllers = @[
-        [[UINavigationController alloc] initWithRootViewController:vc],
-    ];
-    
-    self.window.rootViewController = tabBarController;
+    self.window.rootViewController = navVc;
     [self.window makeKeyAndVisible];
 
     LoggerApp(1, @"Application didFinishLaunchingWithOptions");
