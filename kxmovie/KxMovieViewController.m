@@ -884,7 +884,7 @@ static NSMutableDictionary * gHistory;
                         
                             const CGFloat delta = _moviePosition - frame.position;
                             
-                            if (delta < -2.0) {
+                            if (delta < -0.1) {
                                 
                                 memset(outData, 0, numFrames * numChannels * sizeof(float));
 #ifdef DEBUG
@@ -897,7 +897,7 @@ static NSMutableDictionary * gHistory;
                             
                             [_audioFrames removeObjectAtIndex:0];
                             
-                            if (delta > 2.0 && count > 1) {
+                            if (delta > 0.1 && count > 1) {
                                 
 #ifdef DEBUG
                                 LoggerStream(0, @"desync audio (lags) skip %.4f %.4f", _moviePosition, frame.position);
