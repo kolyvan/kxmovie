@@ -15,6 +15,7 @@ SDK_VERSION='7.1'
 XCODE_PATH='/Applications/Xcode.app/Contents/Developer/Platforms'
 GCC_PATH='/Applications/XCode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang'
 LIB_PATH='/usr/lib/system'
+GASPREP_DEST_PATH='/usr/local/bin'
 PLATOFRM_PATH_SIM ='/iPhoneSimulator.platform'
 PLATOFRM_PATH_IOS ='/iPhoneOS.platform'
 SDK_PATH_SIM="/Developer/SDKs/iPhoneSimulator#{SDK_VERSION}.sdk"
@@ -180,7 +181,13 @@ task :check_gas_preprocessor do
 	end
 
 	unless found
-		raise "Build failed: first install gas-preprocessor.pl.\nSee http://stackoverflow.com/questions/5056600/how-to-install-gas-preprocessor for more info."
+    # See http://stackoverflow.com/questions/5056600/how-to-install-gas-preprocessor for more info.
+    puts "Installing the gas-preprocessor to #{GASPREP_DEST_PATH}"
+    
+    FileUtils.move Pathname.new("gas-preprocessor/gas-preprocessor.pl"), Pathname.new(GASPREP_DEST_PATH)
+  	system_or_exit "chmod +x #{GASPREP_DEST_PATH}/gas-preprocessor.pl"
+    
+    # raise "Build failed: first install gas-preprocessor.pl.\nSee http://stackoverflow.com/questions/5056600/how-to-install-gas-preprocessor for more info."
 	end
 
 end
