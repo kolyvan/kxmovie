@@ -235,6 +235,7 @@ static NSMutableDictionary * gHistory;
     _messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(20,40,width-40,40)];
     _messageLabel.backgroundColor = [UIColor clearColor];
     _messageLabel.textColor = [UIColor redColor];
+_messageLabel.hidden = YES;
     _messageLabel.font = [UIFont systemFontOfSize:14];
     _messageLabel.numberOfLines = 2;
     _messageLabel.textAlignment = NSTextAlignmentCenter;
