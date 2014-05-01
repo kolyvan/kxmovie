@@ -841,8 +841,8 @@ static int interrupt_callback(void *ctx);
     if (avcodec_open2(codecCtx, codec, NULL) < 0)
         return kxMovieErrorOpenCodec;
         
-    _videoFrame = avcodec_alloc_frame();
-    
+    _videoFrame = av_frame_alloc();
+
     if (!_videoFrame) {
         avcodec_close(codecCtx);
         return kxMovieErrorAllocateFrame;
@@ -918,7 +918,8 @@ static int interrupt_callback(void *ctx);
         }
     }
     
-    _audioFrame = avcodec_alloc_frame();
+    _audioFrame = av_frame_alloc();
+
     if (!_audioFrame) {
         if (swrContext)
             swr_free(&swrContext);
