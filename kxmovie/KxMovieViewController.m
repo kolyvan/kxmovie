@@ -282,13 +282,13 @@ static NSMutableDictionary * gHistory;
     _progressLabel.text = @"00:00:00";
     _progressLabel.font = [UIFont systemFontOfSize:12];
     
-    _progressSlider = [[UISlider alloc] initWithFrame:CGRectMake(100,4,width-182,20)];
+    _progressSlider = [[UISlider alloc] initWithFrame:CGRectMake(100,6,width-182,20)];
     _progressSlider.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     _progressSlider.continuous = NO;
     _progressSlider.value = 0;
     [_progressSlider setThumbImage:[UIImage imageNamed:@"kxmovie.bundle/sliderthumb"]
                           forState:UIControlStateNormal];
-    
+
     _leftLabel = [[UILabel alloc] initWithFrame:CGRectMake(width-80,5,60,20)];
     _leftLabel.backgroundColor = [UIColor clearColor];
     _leftLabel.opaque = NO;
@@ -369,7 +369,7 @@ static NSMutableDictionary * gHistory;
                           [NSNumber numberWithFloat:0.9],
                           nil];
     [_bottomHUD.layer insertSublayer:gradient atIndex:0];
-    
+
     
     gradient = [CAGradientLayer layer];
     gradient.frame = _topHUD.bounds;
