@@ -64,6 +64,8 @@
     [self.view addSubview:self.tableView];
 }
 
+- (BOOL)prefersStatusBarHidden { return YES; }
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];

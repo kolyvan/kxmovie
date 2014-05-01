@@ -153,6 +153,8 @@ static NSMutableDictionary * gHistory;
         gHistory = [NSMutableDictionary dictionary];
 }
 
+- (BOOL)prefersStatusBarHidden { return YES; }
+
 + (id) movieViewControllerWithContentPath: (NSString *) path
                                parameters: (NSDictionary *) parameters
 {    
