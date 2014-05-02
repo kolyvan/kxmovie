@@ -70,12 +70,14 @@
 {
     [super viewDidLoad];
 
-//    [self performSelector:@selector(launchDebugTest) withObject:nil afterDelay:0.5];
+#ifdef DEBUG_AUTOPLAY
+    [self performSelector:@selector(launchDebugTest) withObject:nil afterDelay:0.5];
+#endif
 }
 
 - (void)launchDebugTest
 {
-    [self tableView:self.tableView didSelectRowAtIndexPath:[NSIndexPath indexPathForRow:1
+    [self tableView:self.tableView didSelectRowAtIndexPath:[NSIndexPath indexPathForRow:4
                                                                               inSection:1]];
 }
 
@@ -216,10 +218,12 @@
     
     if (indexPath.section == 0) {
         
+        if (indexPath.row >= _remoteMovies.count) return;
         path = _remoteMovies[indexPath.row];
         
     } else {
-        
+
+        if (indexPath.row >= _localMovies.count) return;
         path = _localMovies[indexPath.row];
     }
     

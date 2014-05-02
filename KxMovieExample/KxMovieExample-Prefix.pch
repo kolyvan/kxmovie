@@ -15,6 +15,12 @@
 
 
 
+// Launch automatically a video, to accelerate the debug tests.
+#define DEBUG_AUTOPLAY
+
+
+
+// Which logger system to use NSLogger or NSLog.
 #define USE_NSLOGGER
 
 #ifdef DEBUG
