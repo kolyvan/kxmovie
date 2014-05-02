@@ -837,7 +837,10 @@ _messageLabel.hidden = YES;
                     if (count > 0) {
                         
                         KxAudioFrame *frame = _audioFrames[0];
-                        
+
+#ifdef DUMP_AUDIO_DATA
+                        LoggerAudio(2, @"Audio frame position: %f", frame.position);
+#endif
                         if (_decoder.validVideo) {
                         
                             const CGFloat delta = _moviePosition - frame.position;

@@ -22,6 +22,8 @@
 #define MAX_FRAME_SIZE 4096
 #define MAX_CHAN       2
 
+#define MAX_SAMPLE_DUMPED 5
+
 static BOOL checkError(OSStatus error, const char *operation);
 static void sessionPropertyListener(void *inClientData, AudioSessionPropertyID inID, UInt32 inDataSize, const void *inData);
 static void sessionInterruptionListener(void *inClientData, UInt32 inInterruption);
@@ -103,7 +105,7 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
 #define dumpAudioSamples(prefix, dataBuffer, samplePrintFormat, sampleCount, channelCount) \
 { \
     NSMutableString *dump = [NSMutableString stringWithFormat:prefix]; \
-    for (int i = 0; i < MIN(20, sampleCount); i++) \
+    for (int i = 0; i < MIN(MAX_SAMPLE_DUMPED, sampleCount); i++) \
     { \
         for (int j = 0; j < channelCount; j++) \
         { \
@@ -117,7 +119,7 @@ static OSStatus renderCallback (void *inRefCon, AudioUnitRenderActionFlags	*ioAc
 #define dumpAudioSamplesNonInterleaved(prefix, dataBuffer, samplePrintFormat, sampleCount, channelCount) \
 { \
     NSMutableString *dump = [NSMutableString stringWithFormat:prefix]; \
-    for (int i = 0; i < MIN(20, sampleCount); i++) \
+    for (int i = 0; i < MIN(MAX_SAMPLE_DUMPED, sampleCount); i++) \
     { \
         for (int j = 0; j < channelCount; j++) \
         { \
