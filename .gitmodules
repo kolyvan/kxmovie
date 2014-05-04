@@ -3,4 +3,4 @@
 	url = git://github.com/FFmpeg/FFmpeg.git
 [submodule "gas-preprocessor"]
 	path = gas-preprocessor
-	url = git://github.com/mansr/gas-preprocessor.git
+url=git://github.com/libav/gas-preprocessor.git

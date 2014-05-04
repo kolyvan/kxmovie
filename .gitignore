@@ -15,15 +15,15 @@ project.xcworkspace
 
 ## generic files to ignore
 *~
-*.lock
 *.DS_Store
 *.swp
 *.out
 
 ## my
 tmp/*
-libs/*
+libs/FFmpeg/*
 output/*
 plan
 
 
+KxMovieExample/SampleMovies/*

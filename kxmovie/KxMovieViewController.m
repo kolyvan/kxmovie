@@ -15,6 +15,7 @@
 #import "KxMovieDecoder.h"
 #import "KxAudioManager.h"
 #import "KxMovieGLView.h"
+#import "KxLogger.h"
 
 NSString * const KxMovieParameterMinBufferedDuration = @"KxMovieParameterMinBufferedDuration";
 NSString * const KxMovieParameterMaxBufferedDuration = @"KxMovieParameterMaxBufferedDuration";
@@ -32,26 +33,14 @@ static NSString * formatTimeInterval(CGFloat seconds, BOOL isLeft)
     
     s = s % 60;
     m = m % 60;
-    
-    return [NSString stringWithFormat:@"%@%d:%0.2d:%0.2d", isLeft ? @"-" : @"", h,m,s];
+
+    NSMutableString *format = [(isLeft && seconds >= 0.5 ? @"-" : @"") mutableCopy];
+    if (h != 0) [format appendFormat:@"%d:%0.2d", h, m];
+    else        [format appendFormat:@"%d", m];
+    [format appendFormat:@":%0.2d", s];
+
+    return format;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-@interface HudView : UIView
-@end
-
-@implementation HudView
-
-- (void)layoutSubviews
-{
-    NSArray * layers = self.layer.sublayers;
-    if (layers.count > 0) {        
-        CALayer *layer = layers[0];
-        layer.frame = self.bounds;
-    }
-}
-@end
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -104,13 +93,18 @@ static NSMutableDictionary * gHistory;
 
     KxMovieGLView       *_glView;
     UIImageView         *_imageView;
-    HudView             *_topHUD;
-    UIView              *_bottomHUD;
+    UIView              *_topHUD;
+    UIToolbar           *_topBar;
+    UIToolbar           *_bottomBar;
     UISlider            *_progressSlider;
-    MPVolumeView        *_volumeSlider;
-    UIButton            *_playButton;
-    UIButton            *_rewindButton;
-    UIButton            *_forwardButton;
+
+    UIBarButtonItem     *_playBtn;
+    UIBarButtonItem     *_pauseBtn;
+    UIBarButtonItem     *_rewindBtn;
+    UIBarButtonItem     *_fforwardBtn;
+    UIBarButtonItem     *_spaceItem;
+    UIBarButtonItem     *_fixedSpaceItem;
+
     UIButton            *_doneButton;
     UILabel             *_progressLabel;
     UILabel             *_leftLabel;
@@ -153,6 +147,8 @@ static NSMutableDictionary * gHistory;
         gHistory = [NSMutableDictionary dictionary];
 }
 
+- (BOOL)prefersStatusBarHidden { return YES; }
+
 + (id) movieViewControllerWithContentPath: (NSString *) path
                                parameters: (NSDictionary *) parameters
 {    
@@ -170,8 +166,8 @@ static NSMutableDictionary * gHistory;
     if (self) {
         
         _moviePosition = 0;
-        self.wantsFullScreenLayout = YES;
-                
+//        self.wantsFullScreenLayout = YES;
+
         _parameters = parameters;
         
         __weak KxMovieViewController *weakSelf = self;
@@ -209,22 +205,23 @@ static NSMutableDictionary * gHistory;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     
     if (_dispatchQueue) {
-        dispatch_release(_dispatchQueue);
+        // Not needed as of ARC.
+//        dispatch_release(_dispatchQueue);
         _dispatchQueue = NULL;
     }
     
-    NSLog(@"%@ dealloc", self);
+    LoggerStream(1, @"%@ dealloc", self);
 }
 
 - (void)loadView
 {
-    // NSLog(@"loadView");
-    
+    // LoggerStream(1, @"loadView");
     CGRect bounds = [[UIScreen mainScreen] applicationFrame];
     
     self.view = [[UIView alloc] initWithFrame:bounds];
     self.view.backgroundColor = [UIColor blackColor];
-    
+    self.view.tintColor = [UIColor blackColor];
+
     _activityIndicatorView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle: UIActivityIndicatorViewStyleWhiteLarge];
     _activityIndicatorView.center = self.view.center;
     _activityIndicatorView.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
@@ -238,67 +235,74 @@ static NSMutableDictionary * gHistory;
     _messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(20,40,width-40,40)];
     _messageLabel.backgroundColor = [UIColor clearColor];
     _messageLabel.textColor = [UIColor redColor];
+_messageLabel.hidden = YES;
     _messageLabel.font = [UIFont systemFontOfSize:14];
     _messageLabel.numberOfLines = 2;
     _messageLabel.textAlignment = NSTextAlignmentCenter;
     _messageLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     [self.view addSubview:_messageLabel];
 #endif
-    
-    _topHUD      = [[HudView alloc] initWithFrame:CGRectMake(0,0,0,0)];
-    _bottomHUD   = [[UIView alloc] initWithFrame:CGRectMake(0,0,0,0)];
-    
-    _topHUD.opaque = NO;
-    _bottomHUD.opaque = NO;
-    
-    _topHUD.frame = CGRectMake(0,0,width,30);
-    _bottomHUD.frame = CGRectMake(30,height-(75+15),width-(30*2),75);
-    
+
+    CGFloat topH = 50;
+    CGFloat botH = 50;
+
+    _topHUD    = [[UIView alloc] initWithFrame:CGRectMake(0,0,0,0)];
+    _topBar    = [[UIToolbar alloc] initWithFrame:CGRectMake(0, 0, width, topH)];
+    _bottomBar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, height-botH, width, botH)];
+    _bottomBar.tintColor = [UIColor blackColor];
+
+    _topHUD.frame = CGRectMake(0,0,width,_topBar.frame.size.height);
+
     _topHUD.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-    _bottomHUD.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleLeftMargin;
-    
+    _topBar.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    _bottomBar.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
+
+    [self.view addSubview:_topBar];
     [self.view addSubview:_topHUD];
-    [self.view addSubview:_bottomHUD];
-    
+    [self.view addSubview:_bottomBar];
+
     // top hud
-    
+
     _doneButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    _doneButton.frame = CGRectMake(0,4,50,24);
+    _doneButton.frame = CGRectMake(0, 1, 50, topH);
     _doneButton.backgroundColor = [UIColor clearColor];
-    [_doneButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    [_doneButton setTitle:NSLocalizedString(@"Done", nil) forState:UIControlStateNormal];
-    _doneButton.titleLabel.font = [UIFont systemFontOfSize:12];
+//    _doneButton.backgroundColor = [UIColor redColor];
+    [_doneButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [_doneButton setTitle:NSLocalizedString(@"OK", nil) forState:UIControlStateNormal];
+    _doneButton.titleLabel.font = [UIFont systemFontOfSize:18];
     _doneButton.showsTouchWhenHighlighted = YES;
-    [_doneButton addTarget:self action:@selector(doneDidTouch:) forControlEvents:UIControlEventTouchUpInside];
-    
-    _progressLabel = [[UILabel alloc] initWithFrame:CGRectMake(48,5,50,20)];
+    [_doneButton addTarget:self action:@selector(doneDidTouch:)
+          forControlEvents:UIControlEventTouchUpInside];
+//    [_doneButton setContentVerticalAlignment:UIControlContentVerticalAlignmentCenter];
+
+    _progressLabel = [[UILabel alloc] initWithFrame:CGRectMake(46, 1, 50, topH)];
     _progressLabel.backgroundColor = [UIColor clearColor];
     _progressLabel.opaque = NO;
     _progressLabel.adjustsFontSizeToFitWidth = NO;
-    _progressLabel.textAlignment = UITextAlignmentRight;
-    _progressLabel.textColor = [UIColor whiteColor];
-    _progressLabel.text = @"00:00:00";
+    _progressLabel.textAlignment = NSTextAlignmentRight;
+    _progressLabel.textColor = [UIColor blackColor];
+    _progressLabel.text = @"";
     _progressLabel.font = [UIFont systemFontOfSize:12];
     
-    _progressSlider = [[UISlider alloc] initWithFrame:CGRectMake(100,4,width-182,20)];
+    _progressSlider = [[UISlider alloc] initWithFrame:CGRectMake(100, 2, width-197, topH)];
     _progressSlider.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     _progressSlider.continuous = NO;
     _progressSlider.value = 0;
-    [_progressSlider setThumbImage:[UIImage imageNamed:@"kxmovie.bundle/sliderthumb"]
-                          forState:UIControlStateNormal];
-    
-    _leftLabel = [[UILabel alloc] initWithFrame:CGRectMake(width-80,5,60,20)];
+//    [_progressSlider setThumbImage:[UIImage imageNamed:@"kxmovie.bundle/sliderthumb"]
+//                          forState:UIControlStateNormal];
+
+    _leftLabel = [[UILabel alloc] initWithFrame:CGRectMake(width-92, 1, 60, topH)];
     _leftLabel.backgroundColor = [UIColor clearColor];
     _leftLabel.opaque = NO;
     _leftLabel.adjustsFontSizeToFitWidth = NO;
-    _leftLabel.textAlignment = UITextAlignmentLeft;
-    _leftLabel.textColor = [UIColor whiteColor];
-    _leftLabel.text = @"-99:59:59";
+    _leftLabel.textAlignment = NSTextAlignmentLeft;
+    _leftLabel.textColor = [UIColor blackColor];
+    _leftLabel.text = @"";
     _leftLabel.font = [UIFont systemFontOfSize:12];
     _leftLabel.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
     
     _infoButton = [UIButton buttonWithType:UIButtonTypeInfoDark];
-    _infoButton.frame = CGRectMake(width-25,5,20,20);
+    _infoButton.frame = CGRectMake(width-31, (topH-20)/2+1, 20, 20);
     _infoButton.showsTouchWhenHighlighted = YES;
     _infoButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
     [_infoButton addTarget:self action:@selector(infoDidTouch:) forControlEvents:UIControlEventTouchUpInside];
@@ -308,86 +312,44 @@ static NSMutableDictionary * gHistory;
     [_topHUD addSubview:_progressSlider];
     [_topHUD addSubview:_leftLabel];
     [_topHUD addSubview:_infoButton];
-    
+
     // bottom hud
+
+    _spaceItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
+                                                               target:nil
+                                                               action:nil];
     
-    width = _bottomHUD.bounds.size.width;
+    _fixedSpaceItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace
+                                                                    target:nil
+                                                                    action:nil];
+    _fixedSpaceItem.width = 30;
     
-    _rewindButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    _rewindButton.frame = CGRectMake(width * 0.5 - 65, 5, 40, 40);
-    _rewindButton.backgroundColor = [UIColor clearColor];
-    _rewindButton.showsTouchWhenHighlighted = YES;
-    [_rewindButton setImage:[UIImage imageNamed:@"kxmovie.bundle/playback_rew"] forState:UIControlStateNormal];
-    [_rewindButton addTarget:self action:@selector(rewindDidTouch:) forControlEvents:UIControlEventTouchUpInside];
+    _rewindBtn = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRewind
+                                                               target:self
+                                                               action:@selector(rewindDidTouch:)];
+
+    _playBtn = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPlay
+                                                             target:self
+                                                             action:@selector(playDidTouch:)];
+    _playBtn.width = 50;
     
-    _playButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    _playButton.frame = CGRectMake(width * 0.5 - 20, 5, 40, 40);
-    _playButton.backgroundColor = [UIColor clearColor];
-    _playButton.showsTouchWhenHighlighted = YES;
-    [_playButton setImage:[UIImage imageNamed:@"kxmovie.bundle/playback_play"] forState:UIControlStateNormal];
-    [_playButton addTarget:self action:@selector(playDidTouch:) forControlEvents:UIControlEventTouchUpInside];
-    
-    _forwardButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    _forwardButton.frame = CGRectMake(width * 0.5 + 25, 5, 40, 40);
-    _forwardButton.backgroundColor = [UIColor clearColor];
-    _forwardButton.showsTouchWhenHighlighted = YES;
-    [_forwardButton setImage:[UIImage imageNamed:@"kxmovie.bundle/playback_ff"] forState:UIControlStateNormal];
-    [_forwardButton addTarget:self action:@selector(forwardDidTouch:) forControlEvents:UIControlEventTouchUpInside];
-    
-    _volumeSlider = [[MPVolumeView alloc] initWithFrame:CGRectMake(5, 50, width-(5 * 2), 20)];
-    _volumeSlider.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-    _volumeSlider.showsRouteButton = NO;
-    _volumeSlider.showsVolumeSlider = YES;
-    
-    [_bottomHUD addSubview:_rewindButton];
-    [_bottomHUD addSubview:_playButton];
-    [_bottomHUD addSubview:_forwardButton];
-    [_bottomHUD addSubview:_volumeSlider];
-    
-    // gradients
-    
-    CAGradientLayer *gradient;
-    
-    gradient = [CAGradientLayer layer];
-    gradient.frame = _bottomHUD.bounds;
-    gradient.cornerRadius = 5;
-    gradient.masksToBounds = YES;
-    gradient.borderColor = [UIColor darkGrayColor].CGColor;
-    gradient.borderWidth = 1.0f;
-    gradient.colors = [NSArray arrayWithObjects:
-                       (id)[[UIColor whiteColor] colorWithAlphaComponent:0.4].CGColor,
-                       (id)[[UIColor lightGrayColor] colorWithAlphaComponent:0.4].CGColor,
-                       (id)[[UIColor darkGrayColor] colorWithAlphaComponent:0.4].CGColor,
-                       (id)[[UIColor blackColor] colorWithAlphaComponent:0.4].CGColor,
-                       nil];
-    gradient.locations = [NSArray arrayWithObjects:
-                          [NSNumber numberWithFloat:0.0f],
-                          [NSNumber numberWithFloat:0.1f],
-                          [NSNumber numberWithFloat:0.5],
-                          [NSNumber numberWithFloat:0.9],
-                          nil];
-    [_bottomHUD.layer insertSublayer:gradient atIndex:0];
-    
-    
-    gradient = [CAGradientLayer layer];
-    gradient.frame = _topHUD.bounds;
-    gradient.colors = [NSArray arrayWithObjects:
-                       (id)[[UIColor lightGrayColor] colorWithAlphaComponent:0.7].CGColor,
-                       (id)[[UIColor darkGrayColor] colorWithAlphaComponent:0.7].CGColor,
-                       nil];
-    gradient.locations = [NSArray arrayWithObjects:
-                          [NSNumber numberWithFloat:0.0f],
-                          [NSNumber numberWithFloat:0.5],
-                          nil];
-    [_topHUD.layer insertSublayer:gradient atIndex:0];
-    
+    _pauseBtn = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemPause
+                                                              target:self
+                                                              action:@selector(playDidTouch:)];
+    _pauseBtn.width = 50;
+
+    _fforwardBtn = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFastForward
+                                                                 target:self
+                                                                 action:@selector(forwardDidTouch:)];
+
+    [self updateBottomBar];
+
     if (_decoder) {
         
         [self setupPresentView];
         
     } else {
         
-        _bottomHUD.hidden = YES;
         _progressLabel.hidden = YES;
         _progressSlider.hidden = YES;
         _leftLabel.hidden = YES;
@@ -409,7 +371,7 @@ static NSMutableDictionary * gHistory;
             _minBufferedDuration = _maxBufferedDuration = 0;
             [self play];
             
-            NSLog(@"didReceiveMemoryWarning, disable buffering and continue playing");
+            LoggerStream(0, @"didReceiveMemoryWarning, disable buffering and continue playing");
             
         } else {
             
@@ -434,7 +396,7 @@ static NSMutableDictionary * gHistory;
 
 - (void) viewDidAppear:(BOOL)animated
 {
-    // NSLog(@"viewDidAppear");
+    // LoggerStream(1, @"viewDidAppear");
     
     [super viewDidAppear:animated];
         
@@ -492,7 +454,7 @@ static NSMutableDictionary * gHistory;
     _buffered = NO;
     _interrupted = YES;
     
-    NSLog(@"viewWillDisappear %@", self);
+    LoggerStream(1, @"viewWillDisappear %@", self);
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
@@ -505,7 +467,7 @@ static NSMutableDictionary * gHistory;
     [self showHUD:YES];
     [self pause];
     
-    NSLog(@"applicationWillResignActive");    
+    LoggerStream(1, @"applicationWillResignActive");
 }
 
 #pragma mark - gesture recognizer
@@ -544,7 +506,7 @@ static NSMutableDictionary * gHistory;
             const CGFloat ff = pt.x > 0 ? 1.0 : -1.0;            
             [self setMoviePosition: _moviePosition + ff * MIN(sc, 600.0)];
         }
-        //NSLog(@"pan %.2f %.2f %.2f sec", pt.x, vt.x, sc);
+        //LoggerStream(2, @"pan %.2f %.2f %.2f sec", pt.x, vt.x, sc);
     }
 }
 
@@ -585,7 +547,7 @@ static NSMutableDictionary * gHistory;
     if (_decoder.validAudio)
         [self enableAudio:YES];
 
-    NSLog(@"play movie");    
+    LoggerStream(1, @"play movie");
 }
 
 - (void) pause
@@ -597,7 +559,7 @@ static NSMutableDictionary * gHistory;
     //_interrupted = YES;
     [self enableAudio:NO];
     [self updatePlayButton];
-    NSLog(@"pause movie");
+    LoggerStream(1, @"pause movie");
 }
 
 - (void) setMoviePosition: (CGFloat) position
@@ -660,7 +622,7 @@ static NSMutableDictionary * gHistory;
 - (void) setMovieDecoder: (KxMovieDecoder *) decoder
                withError: (NSError *) error
 {
-    NSLog(@"setMovieDecoder");
+    LoggerStream(2, @"setMovieDecoder");
             
     if (!error && decoder) {
         
@@ -708,13 +670,12 @@ static NSMutableDictionary * gHistory;
                 _maxBufferedDuration = _minBufferedDuration * 2;
         }
         
-        NSLog(@"buffered limit: %.1f - %.1f", _minBufferedDuration, _maxBufferedDuration);
+        LoggerStream(2, @"buffered limit: %.1f - %.1f", _minBufferedDuration, _maxBufferedDuration);
         
         if (self.isViewLoaded) {
             
             [self setupPresentView];
             
-            _bottomHUD.hidden       = NO;
             _progressLabel.hidden   = NO;
             _progressSlider.hidden  = NO;
             _leftLabel.hidden       = NO;
@@ -758,9 +719,10 @@ static NSMutableDictionary * gHistory;
     
     if (!_glView) {
         
-        NSLog(@"fallback to use RGB video frame and UIKit");
+        LoggerVideo(0, @"fallback to use RGB video frame and UIKit");
         [_decoder setupVideoFrameFormat:KxVideoFrameFormatRGB];
         _imageView = [[UIImageView alloc] initWithFrame:bounds];
+        _imageView.backgroundColor = [UIColor blackColor];
     }
     
     UIView *frameView = [self frameView];
@@ -813,7 +775,7 @@ static NSMutableDictionary * gHistory;
         _subtitlesLabel.backgroundColor = [UIColor clearColor];
         _subtitlesLabel.opaque = NO;
         _subtitlesLabel.adjustsFontSizeToFitWidth = NO;
-        _subtitlesLabel.textAlignment = UITextAlignmentCenter;
+        _subtitlesLabel.textAlignment = NSTextAlignmentCenter;
         _subtitlesLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
         _subtitlesLabel.textColor = [UIColor whiteColor];
         _subtitlesLabel.font = [UIFont systemFontOfSize:16];
@@ -839,10 +801,10 @@ static NSMutableDictionary * gHistory;
     [view addGestureRecognizer:_doubleTapGestureRecognizer];
     [view addGestureRecognizer:_tapGestureRecognizer];
     
-    _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
-    _panGestureRecognizer.enabled = NO;
-    
-    [view addGestureRecognizer:_panGestureRecognizer];
+//    _panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
+//    _panGestureRecognizer.enabled = NO;
+//    
+//    [view addGestureRecognizer:_panGestureRecognizer];
 }
 
 - (UIView *) frameView
@@ -875,16 +837,19 @@ static NSMutableDictionary * gHistory;
                     if (count > 0) {
                         
                         KxAudioFrame *frame = _audioFrames[0];
-                        
+
+#ifdef DUMP_AUDIO_DATA
+                        LoggerAudio(2, @"Audio frame position: %f", frame.position);
+#endif
                         if (_decoder.validVideo) {
                         
                             const CGFloat delta = _moviePosition - frame.position;
                             
-                            if (delta < -2.0) {
+                            if (delta < -0.1) {
                                 
                                 memset(outData, 0, numFrames * numChannels * sizeof(float));
 #ifdef DEBUG
-                                NSLog(@"desync audio (outrun) wait %.4f %.4f", _moviePosition, frame.position);
+                                LoggerStream(0, @"desync audio (outrun) wait %.4f %.4f", _moviePosition, frame.position);
                                 _debugAudioStatus = 1;
                                 _debugAudioStatusTS = [NSDate date];
 #endif
@@ -893,10 +858,10 @@ static NSMutableDictionary * gHistory;
                             
                             [_audioFrames removeObjectAtIndex:0];
                             
-                            if (delta > 2.0 && count > 1) {
+                            if (delta > 0.1 && count > 1) {
                                 
 #ifdef DEBUG
-                                NSLog(@"desync audio (lags) skip %.4f %.4f", _moviePosition, frame.position);
+                                LoggerStream(0, @"desync audio (lags) skip %.4f %.4f", _moviePosition, frame.position);
                                 _debugAudioStatus = 2;
                                 _debugAudioStatusTS = [NSDate date];
 #endif
@@ -936,7 +901,7 @@ static NSMutableDictionary * gHistory;
             } else {
                 
                 memset(outData, 0, numFrames * numChannels * sizeof(float));
-                //NSLog(@"silence audio");
+                //LoggerStream(1, @"silence audio");
 #ifdef DEBUG
                 _debugAudioStatus = 3;
                 _debugAudioStatusTS = [NSDate date];
@@ -960,10 +925,10 @@ static NSMutableDictionary * gHistory;
         
         [audioManager play];
         
-        NSLog(@"audio device smr: %d fmt: %d chn: %d",
-              (int)audioManager.samplingRate,
-              (int)audioManager.numBytesPerSample,
-              (int)audioManager.numOutputChannels);
+        LoggerAudio(2, @"audio device smr: %d fmt: %d chn: %d",
+                    (int)audioManager.samplingRate,
+                    (int)audioManager.numBytesPerSample,
+                    (int)audioManager.numOutputChannels);
         
     } else {
         
@@ -1159,11 +1124,11 @@ static NSMutableDictionary * gHistory;
     NSTimeInterval correction = dPosition - dTime;
     
     //if ((_tickCounter % 200) == 0)
-    //    NSLog(@"tick correction %.4f", correction);
+    //    LoggerStream(1, @"tick correction %.4f", correction);
     
     if (correction > 1.f || correction < -1.f) {
         
-        NSLog(@"tick correction reset %.2f", correction);
+        LoggerStream(1, @"tick correction reset %.2f", correction);
         correction = 0;
         _tickCorrectionTime = 0;
     }
@@ -1313,10 +1278,16 @@ static NSMutableDictionary * gHistory;
     return actual.count || outdated.count;
 }
 
+- (void) updateBottomBar
+{
+    UIBarButtonItem *playPauseBtn = self.playing ? _pauseBtn : _playBtn;
+    [_bottomBar setItems:@[_spaceItem, _rewindBtn, _fixedSpaceItem, playPauseBtn,
+                           _fixedSpaceItem, _fforwardBtn, _spaceItem] animated:NO];
+}
+
 - (void) updatePlayButton
 {
-    [_playButton setImage:[UIImage imageNamed:self.playing ? @"kxmovie.bundle/playback_pause" : @"kxmovie.bundle/playback_play"]
-                 forState:UIControlStateNormal];
+    [self updateBottomBar];
 }
 
 - (void) updateHUD
@@ -1347,11 +1318,11 @@ static NSMutableDictionary * gHistory;
         }
     }
     
-    if (_debugAudioStatus == 1) audioStatus = @"\n(audio outrun)";
+    if      (_debugAudioStatus == 1) audioStatus = @"\n(audio outrun)";
     else if (_debugAudioStatus == 2) audioStatus = @"\n(audio lags)";
     else if (_debugAudioStatus == 3) audioStatus = @"\n(audio silence)";
     else audioStatus = @"";
-    
+
     _messageLabel.text = [NSString stringWithFormat:@"%d %d%@ %c - %@ %@ %@\n%@",
                           _videoFrames.count,
                           _audioFrames.count,
@@ -1378,8 +1349,9 @@ static NSMutableDictionary * gHistory;
                      animations:^{
                          
                          CGFloat alpha = _hiddenHUD ? 0 : 1;
+                         _topBar.alpha = alpha;
                          _topHUD.alpha = alpha;
-                         _bottomHUD.alpha = alpha;
+                         _bottomBar.alpha = alpha;
                      }
                      completion:nil];
     
