@@ -133,7 +133,7 @@ def ensureDir(path)
 	if dest.exist?
 		FileUtils.rm Dir.glob("#{path}/*.a")
 	else
-		dest.mkdir
+		dest.mkpath
 	end
 
 	dest
