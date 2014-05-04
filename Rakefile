@@ -224,7 +224,7 @@ task :build_ffmpeg_universal do
 	
 	FFMPEG_LIBS.each do |x|
 		args = mkLipoArgs(x)
-		system_or_exit "cd FFmpeg; lipo #{args}"
+		system_or_exit "cd FFmpeg; xcrun -sdk iphoneos lipo #{args}"
 	end
 	
 	dest = ensureDir('libs/FFmpeg/')
