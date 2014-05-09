@@ -146,11 +146,11 @@ def buildArch(arch)
 	else
 		raise "Build failed: unknown arch: #{arch}"
 	end
-	
+
 	system_or_exit "cd ffmpeg; ./configure #{args}"
 	system_or_exit "cd ffmpeg; make"	
 	system_or_exit "cd ffmpeg; make install"
-	system_or_exit "cd ffmpeg; make clean"
+	system_or_exit "cd FFmpeg; [ -f -.d ] && rm -- -.d; make clean"
 	system_or_exit "rm -r #{prefixDir}/lib/pkgconfig"
 
 end
