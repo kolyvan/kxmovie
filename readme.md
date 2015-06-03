@@ -23,7 +23,7 @@ Then generate a debug version which contains all the architectures above, and a 
 	rake build_ffmpeg_armv7s
 	rake build_ffmpeg_arm64
 	
-Generally, the｀`rake`` command is all you need :)
+Generally, the `rake` command is all you need :)
 
 ### Usage
 
