@@ -12,16 +12,19 @@ For this open console and type in
 	cd kxmovie
 	git submodule update --init	
 	rake 
-Generally, rake will firstly build all the architectures: the armv7, armv7s, arm64, i386, x86_64 architecture.
+	
+the rake command will firstly build all the architectures: the armv7, armv7s, arm64, i386, x86_64 architecture.
 Then generate a debug version which contains all the architectures above, and a release version which only contains the armv7 and arm64 architecture.
 <br>you can also using one of these cmds below to specify the architecture:
 
-	rake 
 	rake build_ffmpeg_i386
 	rake build_ffmpeg_x86
 	rake build_ffmpeg_armv7
 	rake build_ffmpeg_armv7s
 	rake build_ffmpeg_arm64
+	
+Generally, the｀`rake`` command is all you need :)
+
 ### Usage
 
 1. Open the kxmovie.xcodeproj with Xcode and drop the kxmovie/ffmpeg_debug into your project. (using kxmovie/ffmpeg_relase instead for release)
