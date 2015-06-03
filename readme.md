@@ -1,8 +1,8 @@
 KxMovie - movie player for iOS using ffmpeg (modified by kinglonghuang)
 ===========================================
 
-### Add X86_64 and arm64 architecture
-
+2015.6.3
+Support arm64 and x86_64 architecture
 
 ### Build instructions:
 
@@ -13,7 +13,7 @@ For this open console and type in
 	git submodule update --init	
 	rake 
 	
-the rake command will firstly build all the architectures: the armv7, armv7s, arm64, i386, x86_64 architecture.
+The rake command will firstly build all the architectures: the armv7, armv7s, arm64, i386, x86_64 architecture.
 Then generate a debug version which contains all the architectures above, and a release version which only contains the armv7 and arm64 architecture.
 <br>you can also using one of these cmds below to specify the architecture:
 
