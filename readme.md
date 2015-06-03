@@ -25,8 +25,8 @@ Then generate a debug version which contains all the architectures above, and a 
 ### Usage
 
 1. Open the kxmovie.xcodeproj with Xcode and drop the kxmovie/ffmpeg_debug into your project. (using kxmovie/ffmpeg_relase instead for release)
-2. Set the "header search path" to "ffmpeg_debug/include" folder, select "recursive"
-something like :"$(SRCROOT)/kxmovie/ffmpeg_debug/include" (or "$(SRCROOT)/kxmovie/ffmpeg_release/include" for release)
+2. Set the "header search path" to "ffmpeg_debug/include" folder, and choose the "recursive" options ((or "ffmpeg_release/include" for a release)
+
 3. Command+B, enjoy yourself :)
 
 Note: The sdk version is 8.3, you may need to change it ("SDK_VERSION" in Rakefile)
@@ -47,12 +47,7 @@ And you can use kxmovie for streaming from remote sources via rtsp,rtmp,http,etc
 
 ### Requirements
 
-at least iOS 6 and iPhone 4 
-
-### Screenshots:
-
-![movie view](https://raw.github.com/kolyvan/kxmovie/master/screenshot-movie.png "Movie View")
-![info view](https://raw.github.com/kolyvan/kxmovie/master/screenshot-info.png "Info View")
+at least iOS 6 and iPhone 4
 
 ### Feedback
 
