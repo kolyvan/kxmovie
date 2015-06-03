@@ -1,7 +1,7 @@
 KxMovie - movie player for iOS using ffmpeg (modified by kinglonghuang)
 ===========================================
 
-2015.6.3
+2015.6.3<br>
 Support arm64 and x86_64 architecture
 
 ### Build instructions:
@@ -54,5 +54,5 @@ at least iOS 6 and iPhone 4
 
 ### Feedback
 
-Tweet me — [@kolyvan_ru](http://twitter.com/kolyvan_ru).
+Tweet me — [@kolyvan_ru](http://twitter.com/kolyvan_ru). <br>
 Email: kinglong_h@126.com
