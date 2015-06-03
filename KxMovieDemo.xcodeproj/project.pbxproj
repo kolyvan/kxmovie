@@ -1,0 +1,485 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		807A93D31B1E9BE800096F84 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 807A93D21B1E9BE800096F84 /* main.m */; };
+		807A93D61B1E9BE800096F84 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 807A93D51B1E9BE800096F84 /* AppDelegate.m */; };
+		807A93DE1B1E9BE800096F84 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 807A93DD1B1E9BE800096F84 /* Images.xcassets */; };
+		807A93E11B1E9BE800096F84 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 807A93DF1B1E9BE800096F84 /* LaunchScreen.xib */; };
+		807A93ED1B1E9BE900096F84 /* KxMovieDemoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 807A93EC1B1E9BE900096F84 /* KxMovieDemoTests.m */; };
+		807A93F81B1E9C0100096F84 /* MainViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 807A93F71B1E9C0100096F84 /* MainViewController.m */; };
+		807A94001B1E9C4200096F84 /* KxAudioManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 807A93FB1B1E9C4200096F84 /* KxAudioManager.m */; };
+		807A94011B1E9C4200096F84 /* KxMovieDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 807A93FD1B1E9C4200096F84 /* KxMovieDecoder.m */; };
+		807A94021B1E9C4200096F84 /* KxMovieGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 807A93FF1B1E9C4200096F84 /* KxMovieGLView.m */; };
+		807A94051B1E9C4C00096F84 /* KxMovieViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 807A94041B1E9C4C00096F84 /* KxMovieViewController.m */; };
+		807A94071B1E9C5800096F84 /* kxmovie.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 807A94061B1E9C5800096F84 /* kxmovie.bundle */; };
+		807A94DF1B1E9EBD00096F84 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 807A94DE1B1E9EBD00096F84 /* libz.dylib */; };
+		807A94E11B1E9ED100096F84 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 807A94E01B1E9ED100096F84 /* libiconv.dylib */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		807A93E71B1E9BE800096F84 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 807A93C51B1E9BE800096F84 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 807A93CC1B1E9BE800096F84;
+			remoteInfo = KxMovieDemo;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		807A93CD1B1E9BE800096F84 /* KxMovieDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KxMovieDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		807A93D11B1E9BE800096F84 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		807A93D21B1E9BE800096F84 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		807A93D41B1E9BE800096F84 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		807A93D51B1E9BE800096F84 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		807A93DD1B1E9BE800096F84 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		807A93E01B1E9BE800096F84 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
+		807A93E61B1E9BE800096F84 /* KxMovieDemoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KxMovieDemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		807A93EB1B1E9BE800096F84 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		807A93EC1B1E9BE900096F84 /* KxMovieDemoTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KxMovieDemoTests.m; sourceTree = "<group>"; };
+		807A93F61B1E9C0100096F84 /* MainViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainViewController.h; sourceTree = "<group>"; };
+		807A93F71B1E9C0100096F84 /* MainViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainViewController.m; sourceTree = "<group>"; };
+		807A93FA1B1E9C4200096F84 /* KxAudioManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KxAudioManager.h; sourceTree = "<group>"; };
+		807A93FB1B1E9C4200096F84 /* KxAudioManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KxAudioManager.m; sourceTree = "<group>"; };
+		807A93FC1B1E9C4200096F84 /* KxMovieDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KxMovieDecoder.h; sourceTree = "<group>"; };
+		807A93FD1B1E9C4200096F84 /* KxMovieDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KxMovieDecoder.m; sourceTree = "<group>"; };
+		807A93FE1B1E9C4200096F84 /* KxMovieGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KxMovieGLView.h; sourceTree = "<group>"; };
+		807A93FF1B1E9C4200096F84 /* KxMovieGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KxMovieGLView.m; sourceTree = "<group>"; };
+		807A94031B1E9C4C00096F84 /* KxMovieViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KxMovieViewController.h; sourceTree = "<group>"; };
+		807A94041B1E9C4C00096F84 /* KxMovieViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KxMovieViewController.m; sourceTree = "<group>"; };
+		807A94061B1E9C5800096F84 /* kxmovie.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = kxmovie.bundle; sourceTree = "<group>"; };
+		807A94DE1B1E9EBD00096F84 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
+		807A94E01B1E9ED100096F84 /* libiconv.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiconv.dylib; path = usr/lib/libiconv.dylib; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		807A93CA1B1E9BE800096F84 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				807A94E11B1E9ED100096F84 /* libiconv.dylib in Frameworks */,
+				807A94DF1B1E9EBD00096F84 /* libz.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		807A93E31B1E9BE800096F84 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		807A93C41B1E9BE800096F84 = {
+			isa = PBXGroup;
+			children = (
+				807A93CF1B1E9BE800096F84 /* KxMovieDemo */,
+				807A93E91B1E9BE800096F84 /* KxMovieDemoTests */,
+				807A93CE1B1E9BE800096F84 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		807A93CE1B1E9BE800096F84 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				807A93CD1B1E9BE800096F84 /* KxMovieDemo.app */,
+				807A93E61B1E9BE800096F84 /* KxMovieDemoTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		807A93CF1B1E9BE800096F84 /* KxMovieDemo */ = {
+			isa = PBXGroup;
+			children = (
+				807A93F91B1E9C4200096F84 /* KxMovie */,
+				807A93D41B1E9BE800096F84 /* AppDelegate.h */,
+				807A93D51B1E9BE800096F84 /* AppDelegate.m */,
+				807A93F61B1E9C0100096F84 /* MainViewController.h */,
+				807A93F71B1E9C0100096F84 /* MainViewController.m */,
+				807A94031B1E9C4C00096F84 /* KxMovieViewController.h */,
+				807A94041B1E9C4C00096F84 /* KxMovieViewController.m */,
+				807A93DD1B1E9BE800096F84 /* Images.xcassets */,
+				807A93DF1B1E9BE800096F84 /* LaunchScreen.xib */,
+				807A93D01B1E9BE800096F84 /* Supporting Files */,
+			);
+			path = KxMovieDemo;
+			sourceTree = "<group>";
+		};
+		807A93D01B1E9BE800096F84 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				807A94E01B1E9ED100096F84 /* libiconv.dylib */,
+				807A94DE1B1E9EBD00096F84 /* libz.dylib */,
+				807A94061B1E9C5800096F84 /* kxmovie.bundle */,
+				807A93D11B1E9BE800096F84 /* Info.plist */,
+				807A93D21B1E9BE800096F84 /* main.m */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		807A93E91B1E9BE800096F84 /* KxMovieDemoTests */ = {
+			isa = PBXGroup;
+			children = (
+				807A93EC1B1E9BE900096F84 /* KxMovieDemoTests.m */,
+				807A93EA1B1E9BE800096F84 /* Supporting Files */,
+			);
+			path = KxMovieDemoTests;
+			sourceTree = "<group>";
+		};
+		807A93EA1B1E9BE800096F84 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				807A93EB1B1E9BE800096F84 /* Info.plist */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		807A93F91B1E9C4200096F84 /* KxMovie */ = {
+			isa = PBXGroup;
+			children = (
+				807A93FA1B1E9C4200096F84 /* KxAudioManager.h */,
+				807A93FB1B1E9C4200096F84 /* KxAudioManager.m */,
+				807A93FC1B1E9C4200096F84 /* KxMovieDecoder.h */,
+				807A93FD1B1E9C4200096F84 /* KxMovieDecoder.m */,
+				807A93FE1B1E9C4200096F84 /* KxMovieGLView.h */,
+				807A93FF1B1E9C4200096F84 /* KxMovieGLView.m */,
+			);
+			path = KxMovie;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		807A93CC1B1E9BE800096F84 /* KxMovieDemo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 807A93F01B1E9BE900096F84 /* Build configuration list for PBXNativeTarget "KxMovieDemo" */;
+			buildPhases = (
+				807A93C91B1E9BE800096F84 /* Sources */,
+				807A93CA1B1E9BE800096F84 /* Frameworks */,
+				807A93CB1B1E9BE800096F84 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KxMovieDemo;
+			productName = KxMovieDemo;
+			productReference = 807A93CD1B1E9BE800096F84 /* KxMovieDemo.app */;
+			productType = "com.apple.product-type.application";
+		};
+		807A93E51B1E9BE800096F84 /* KxMovieDemoTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 807A93F31B1E9BE900096F84 /* Build configuration list for PBXNativeTarget "KxMovieDemoTests" */;
+			buildPhases = (
+				807A93E21B1E9BE800096F84 /* Sources */,
+				807A93E31B1E9BE800096F84 /* Frameworks */,
+				807A93E41B1E9BE800096F84 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				807A93E81B1E9BE800096F84 /* PBXTargetDependency */,
+			);
+			name = KxMovieDemoTests;
+			productName = KxMovieDemoTests;
+			productReference = 807A93E61B1E9BE800096F84 /* KxMovieDemoTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		807A93C51B1E9BE800096F84 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0630;
+				ORGANIZATIONNAME = KLStudio;
+				TargetAttributes = {
+					807A93CC1B1E9BE800096F84 = {
+						CreatedOnToolsVersion = 6.3.2;
+					};
+					807A93E51B1E9BE800096F84 = {
+						CreatedOnToolsVersion = 6.3.2;
+						TestTargetID = 807A93CC1B1E9BE800096F84;
+					};
+				};
+			};
+			buildConfigurationList = 807A93C81B1E9BE800096F84 /* Build configuration list for PBXProject "KxMovieDemo" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 807A93C41B1E9BE800096F84;
+			productRefGroup = 807A93CE1B1E9BE800096F84 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				807A93CC1B1E9BE800096F84 /* KxMovieDemo */,
+				807A93E51B1E9BE800096F84 /* KxMovieDemoTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		807A93CB1B1E9BE800096F84 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				807A94071B1E9C5800096F84 /* kxmovie.bundle in Resources */,
+				807A93E11B1E9BE800096F84 /* LaunchScreen.xib in Resources */,
+				807A93DE1B1E9BE800096F84 /* Images.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		807A93E41B1E9BE800096F84 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		807A93C91B1E9BE800096F84 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				807A94011B1E9C4200096F84 /* KxMovieDecoder.m in Sources */,
+				807A93D61B1E9BE800096F84 /* AppDelegate.m in Sources */,
+				807A93D31B1E9BE800096F84 /* main.m in Sources */,
+				807A94051B1E9C4C00096F84 /* KxMovieViewController.m in Sources */,
+				807A93F81B1E9C0100096F84 /* MainViewController.m in Sources */,
+				807A94001B1E9C4200096F84 /* KxAudioManager.m in Sources */,
+				807A94021B1E9C4200096F84 /* KxMovieGLView.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		807A93E21B1E9BE800096F84 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				807A93ED1B1E9BE900096F84 /* KxMovieDemoTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		807A93E81B1E9BE800096F84 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 807A93CC1B1E9BE800096F84 /* KxMovieDemo */;
+			targetProxy = 807A93E71B1E9BE800096F84 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		807A93DF1B1E9BE800096F84 /* LaunchScreen.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				807A93E01B1E9BE800096F84 /* Base */,
+			);
+			name = LaunchScreen.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		807A93EE1B1E9BE900096F84 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		807A93EF1B1E9BE900096F84 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		807A93F11B1E9BE900096F84 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_FILE = KxMovieDemo/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/KxMovieDemo/KxMovie/ffmpeg_armv7/lib",
+					"$(PROJECT_DIR)/KxMovieDemo/KxMovie/ffmpeg_arm64/lib",
+					"$(PROJECT_DIR)/KxMovieDemo/KxMovie/ffmpeg_universal/lib",
+					"$(PROJECT_DIR)/KxMovieDemo/KxMovie/ffmpeg_release/lib",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "";
+			};
+			name = Debug;
+		};
+		807A93F21B1E9BE900096F84 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_FILE = KxMovieDemo/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/KxMovieDemo/KxMovie/ffmpeg_armv7/lib",
+					"$(PROJECT_DIR)/KxMovieDemo/KxMovie/ffmpeg_arm64/lib",
+					"$(PROJECT_DIR)/KxMovieDemo/KxMovie/ffmpeg_universal/lib",
+					"$(PROJECT_DIR)/KxMovieDemo/KxMovie/ffmpeg_release/lib",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "";
+			};
+			name = Release;
+		};
+		807A93F41B1E9BE900096F84 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(inherited)",
+				);
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = KxMovieDemoTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KxMovieDemo.app/KxMovieDemo";
+			};
+			name = Debug;
+		};
+		807A93F51B1E9BE900096F84 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = KxMovieDemoTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KxMovieDemo.app/KxMovieDemo";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		807A93C81B1E9BE800096F84 /* Build configuration list for PBXProject "KxMovieDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				807A93EE1B1E9BE900096F84 /* Debug */,
+				807A93EF1B1E9BE900096F84 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		807A93F01B1E9BE900096F84 /* Build configuration list for PBXNativeTarget "KxMovieDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				807A93F11B1E9BE900096F84 /* Debug */,
+				807A93F21B1E9BE900096F84 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		807A93F31B1E9BE900096F84 /* Build configuration list for PBXNativeTarget "KxMovieDemoTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				807A93F41B1E9BE900096F84 /* Debug */,
+				807A93F51B1E9BE900096F84 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 807A93C51B1E9BE800096F84 /* Project object */;
+}
