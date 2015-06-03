@@ -1,6 +1,9 @@
 KxMovie - movie player for iOS using ffmpeg (modified by kinglonghuang)
 ===========================================
 
+### Add X86_64 and arm64 architecture
+
+
 ### Build instructions:
 
 First you need download, configure and build [FFmpeg](http://ffmpeg.org/index.html).
@@ -9,21 +12,24 @@ For this open console and type in
 	cd kxmovie
 	git submodule update --init	
 	rake 
-Generally, rake will build the armv7,armv7s,i386,and the universal versions under the ./kvmovie folder
+Generally, rake will firstly build all the architectures: the armv7, armv7s, arm64, i386, x86_64 architecture.
+Then generate a debug version which contains all the architectures above, and a release version which only contains the armv7 and arm64 architecture.
 <br>you can also using one of these cmds below to specify the architecture:
 
 	rake 
 	rake build_ffmpeg_i386
+	rake build_ffmpeg_x86
 	rake build_ffmpeg_armv7
 	rake build_ffmpeg_armv7s
-
+	rake build_ffmpeg_arm64
 ### Usage
 
-1. Open the kxmovie.xcodeproj with Xcode and drop the kxmovie/ffmpeg_XX into your project.
-2. Set the “header search path” to your “ffmpeg_XX/include” folder, something like "$(SRCROOT)/kxmovie/ffmpeg_armv7/include"
+1. Open the kxmovie.xcodeproj with Xcode and drop the kxmovie/ffmpeg_debug into your project. (using kxmovie/ffmpeg_relase instead for release)
+2. Set the "header search path" to "ffmpeg_debug/include" folder, select "recursive"
+something like :"$(SRCROOT)/kxmovie/ffmpeg_debug/include" (or "$(SRCROOT)/kxmovie/ffmpeg_release/include" for release)
 3. Command+B, enjoy yourself :)
 
-Note: If you want to build only the armv7 version, delete the armv7s item in the “Vaild Architectures” row, or delete the armv7 item if you want to build only a armv7 version
+Note: The sdk version is 8.3, you may need to change it ("SDK_VERSION" in Rakefile)
 
 For play movies:
 
@@ -41,7 +47,7 @@ And you can use kxmovie for streaming from remote sources via rtsp,rtmp,http,etc
 
 ### Requirements
 
-at least iOS 5.1 and iPhone 3GS 
+at least iOS 6 and iPhone 4 
 
 ### Screenshots:
 
