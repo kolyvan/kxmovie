@@ -12,7 +12,7 @@ end
 
 ## build ffmpeg
 
-SDK_VERSION='7.1'
+SDK_VERSION='8.3'
 
 XCODE_PATH='/Applications/Xcode.app/Contents/Developer/Platforms'
 GCC_PATH='/Applications/XCode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang'
@@ -132,7 +132,7 @@ def ensureDir(path)
 end
 
 def buildArch(arch)
-	prefixDir = ensureDir(ENV['PWD'] + "/kxmovie/ffmpeg_" + arch)
+	prefixDir = ensureDir(ENV['PWD'] + "/KxMovieDemo/ffmpeg_" + arch)
 	
 	case arch
 	when 'i386'
@@ -200,15 +200,15 @@ end
 
 desc "Build ffmpeg universal libs"
 task :build_ffmpeg_universal do	
-	ensureDir(ENV['PWD'] + "/kxmovie/ffmpeg_" + "universal")
-	cpySrc = ENV['PWD'] + "/kxmovie/ffmpeg_armv7/*"
-	cpyDest = ensureDir(ENV['PWD'] + "/kxmovie/ffmpeg_universal")	
+	ensureDir(ENV['PWD'] + "/KxMovieDemo/ffmpeg_" + "universal")
+	cpySrc = ENV['PWD'] + "/KxMovieDemo/ffmpeg_armv7/*"
+	cpyDest = ensureDir(ENV['PWD'] + "/KxMovieDemo/ffmpeg_universal")	
 	system_or_exit "cp -r #{cpySrc} #{cpyDest}"
 
-	srddc = ENV['PWD'] + "/kxmovie/ffmpeg_armv7/lib"
-	armv7sPath = ENV['PWD']+"/kxmovie/ffmpeg_armv7s/lib"
-	arm64Path = ENV['PWD']+"/kxmovie/ffmpeg_arm64/lib"
-	i386Path = ENV['PWD']+"/kxmovie/ffmpeg_i386/lib"
+	srddc = ENV['PWD'] + "/KxMovieDemo/ffmpeg_armv7/lib"
+	armv7sPath = ENV['PWD']+"/KxMovieDemo/ffmpeg_armv7s/lib"
+	arm64Path = ENV['PWD']+"/KxMovieDemo/ffmpeg_arm64/lib"
+	i386Path = ENV['PWD']+"/KxMovieDemo/ffmpeg_i386/lib"
 	universalLibPath = "#{cpyDest}/lib" 
 	FFMPEG_LIBS.each do |x|
 		args = mkLipoArgs(x, srddc, armv7sPath, arm64Path,i386Path, universalLibPath)
