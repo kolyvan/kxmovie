@@ -155,8 +155,12 @@ def buildArch(arch)
 
 end
 
-def mkLipoArgs(lib, armv7Path, armv7sPath, arm64Path, i386Path, outputPath)
+def mkUniversalLipoArgs(lib, armv7Path, armv7sPath, arm64Path, i386Path, outputPath)
 	"-create -arch armv7 #{armv7Path}/#{lib}.a -arch armv7 #{armv7sPath}/#{lib}.a -arch arm64 #{arm64Path}/#{lib}.a -arch i386 #{i386Path}/#{lib}.a -output #{outputPath}/#{lib}.a"
+end
+
+def mkReleaseLipoArgs(lib, armv7Path, arm64Path, outputPath)
+	"-create -arch armv7 #{armv7Path}/#{lib}.a -arch arm64 #{arm64Path}/#{lib}.a -output #{outputPath}/#{lib}.a"
 end
 
 desc "check gas-preprocessor.pl"
@@ -211,11 +215,27 @@ task :build_ffmpeg_universal do
 	i386Path = ENV['PWD']+"/KxMovieDemo/ffmpeg_i386/lib"
 	universalLibPath = "#{cpyDest}/lib" 
 	FFMPEG_LIBS.each do |x|
-		args = mkLipoArgs(x, srddc, armv7sPath, arm64Path,i386Path, universalLibPath)
+		args = mkUniversalLipoArgs(x, srddc, armv7sPath, arm64Path,i386Path, universalLibPath)
+		system_or_exit "lipo #{args}"
+	end
+end
+
+desc "Build ffmpeg release libs"
+task :build_ffmpeg_release do	
+	ensureDir(ENV['PWD'] + "/KxMovieDemo/ffmpeg_" + "release")
+	cpySrc = ENV['PWD'] + "/KxMovieDemo/ffmpeg_armv7/*"
+	cpyDest = ensureDir(ENV['PWD'] + "/KxMovieDemo/ffmpeg_release")	
+	system_or_exit "cp -r #{cpySrc} #{cpyDest}"
+
+	armv7Path = ENV['PWD'] + "/KxMovieDemo/ffmpeg_armv7/lib"
+	arm64Path = ENV['PWD']+"/KxMovieDemo/ffmpeg_arm64/lib"
+	releaseLibPath = "#{cpyDest}/lib" 
+	FFMPEG_LIBS.each do |x|
+		args = mkReleaseLipoArgs(x, armv7Path, arm64Path, releaseLibPath)
 		system_or_exit "lipo #{args}"
 	end
 end
 
 ##
-task :build_ffmpeg => [:check_gas_preprocessor, :build_ffmpeg_i386, :build_ffmpeg_armv7, :build_ffmpeg_armv7s, :build_ffmpeg_arm64, :build_ffmpeg_universal]
+task :build_ffmpeg => [:check_gas_preprocessor, :build_ffmpeg_i386, :build_ffmpeg_armv7, :build_ffmpeg_armv7s, :build_ffmpeg_arm64, :build_ffmpeg_universal, :build_ffmpeg_release]
 task :default => [:build_ffmpeg]
