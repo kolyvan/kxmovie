@@ -10,7 +10,7 @@ end
 
 ## build ffmpeg
 
-SDK_VERSION='8.4'
+SDK_VERSION='9.0'
 
 XCODE_PATH='/Applications/Xcode.app/Contents/Developer/Platforms'
 GCC_PATH='/Applications/XCode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang'
@@ -28,7 +28,7 @@ FFMPEG_BUILD_ARGS_SIM = [
 '--arch=i386',
 '--cpu=i386',
 "--extra-ldflags='-arch i386 -miphoneos-version-min=7.0'",
-"--extra-cflags='-arch i386 -miphoneos-version-min=7.0'",
+"--extra-cflags='-arch i386 -miphoneos-version-min=7.0 -fembed-bitcode'",
 '--disable-asm',
 ]
 
@@ -38,7 +38,7 @@ FFMPEG_BUILD_ARGS_SIM_64 = [
 '--arch=x86_64',
 '--cpu=x86_64',
 "--extra-ldflags='-arch x86_64 -miphoneos-version-min=7.0'",
-"--extra-cflags='-arch x86_64 -miphoneos-version-min=7.0'",
+"--extra-cflags='-arch x86_64 -miphoneos-version-min=7.0 -fembed-bitcode'",
 '--disable-asm',
 ]
 
@@ -46,9 +46,9 @@ FFMPEG_BUILD_ARGS_ARMV7 = [
 '--arch=arm',
 '--cpu=cortex-a8',
 '--enable-pic',
-"--extra-cflags='-arch armv7 -miphoneos-version-min=7.0'",
+"--extra-cflags='-arch armv7 -miphoneos-version-min=7.0 -fembed-bitcode'",
 "--extra-ldflags='-arch armv7 -miphoneos-version-min=7.0'",
-"--extra-cflags='-mfpu=neon -mfloat-abi=softfp'",
+"--extra-cflags='-mfpu=neon -mfloat-abi=softfp -fembed-bitcode'",
 '--enable-neon',
 # '--disable-neon',
 '--enable-optimizations',
@@ -63,9 +63,9 @@ FFMPEG_BUILD_ARGS_ARMV7S = [
 '--arch=arm',
 '--cpu=cortex-a9',
 '--enable-pic',
-"--extra-cflags='-arch armv7s -miphoneos-version-min=7.0'",
+"--extra-cflags='-arch armv7s -miphoneos-version-min=7.0 -fembed-bitcode'",
 "--extra-ldflags='-arch armv7s -miphoneos-version-min=7.0'",
-"--extra-cflags='-mfpu=neon -mfloat-abi=softfp'",
+"--extra-cflags='-mfpu=neon -mfloat-abi=softfp -fembed-bitcode'",
 '--enable-neon',
 # '--disable-neon',
 '--enable-optimizations',
@@ -80,9 +80,9 @@ FFMPEG_BUILD_ARGS_ARM64 = [
 '--arch=arm64',
 # '--cpu=cortex-a9',
 '--enable-pic',
-"--extra-cflags='-arch arm64 -miphoneos-version-min=7.0'",
+"--extra-cflags='-arch arm64 -miphoneos-version-min=7.0 -fembed-bitcode'",
 "--extra-ldflags='-arch arm64 -miphoneos-version-min=7.0'",
-"--extra-cflags='-mfpu=neon -mfloat-abi=softfp'",
+"--extra-cflags='-mfpu=neon -mfloat-abi=softfp -fembed-bitcode'",
 '--enable-neon',
 # '--disable-neon',
 '--enable-optimizations',
