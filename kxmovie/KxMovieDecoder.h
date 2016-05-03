@@ -84,6 +84,19 @@ typedef enum {
 
 typedef BOOL(^KxMovieDecoderInterruptCallback)();
 
+@protocol KxMovieIOStream<NSObject>
+
+- (NSInteger) ioStreamReadBuffer:  (Byte *) buffer bufSize: (NSInteger) bufSize;
+- (NSInteger) ioStreamWriteBuffer: (Byte *) buffer bufSize: (NSInteger) bufSize;
+- (UInt64)    ioStreamSeekOffset: (UInt64) offset whence: (NSInteger) whence;
+
+- (BOOL) ioStreamOpen: (NSString *)path;
+- (void) ioStreamClose;
+
+@optional
+- (UInt64)    ioStreamSize;
+@end
+
 @interface KxMovieDecoder : NSObject
 
 @property (readonly, nonatomic, strong) NSString *path;
@@ -107,6 +120,7 @@ typedef BOOL(^KxMovieDecoderInterruptCallback)();
 @property (readonly, nonatomic) CGFloat startTime;
 @property (readwrite, nonatomic) BOOL disableDeinterlacing;
 @property (readwrite, nonatomic, strong) KxMovieDecoderInterruptCallback interruptCallback;
+@property (readwrite, nonatomic, strong) id<KxMovieIOStream> ioStream;
 
 + (id) movieDecoderWithContentPath: (NSString *) path
                              error: (NSError **) perror;
