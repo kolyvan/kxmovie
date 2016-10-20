@@ -10,16 +10,13 @@ end
 
 ## build ffmpeg
 
-SDK_VERSION='7.1'
+SDK_VERSION='10.0'
 
-XCODE_PATH='/Applications/Xcode.app/Contents/Developer/Platforms'
-GCC_PATH='/Applications/XCode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang'
+GCC_PATH='`xcrun -f --sdk iphoneos clang`'
 LIB_PATH='/usr/lib/system'
 GASPREP_DEST_PATH='/usr/local/bin'
-PLATOFRM_PATH_SIM ='/iPhoneSimulator.platform'
-PLATOFRM_PATH_IOS ='/iPhoneOS.platform'
-SDK_PATH_SIM="/Developer/SDKs/iPhoneSimulator#{SDK_VERSION}.sdk"
-SDK_PATH_IOS="/Developer/SDKs/iPhoneOS#{SDK_VERSION}.sdk"
+SDK_PATH_SIM="`xcrun --sdk iphonesimulator --show-sdk-path`"
+SDK_PATH_IOS="`xcrun --sdk iphoneos --show-sdk-path`"
 
 
 FFMPEG_BUILD_ARGS_SIM = [
@@ -27,8 +24,18 @@ FFMPEG_BUILD_ARGS_SIM = [
 '--disable-mmx',
 '--arch=i386',
 '--cpu=i386',
-"--extra-ldflags='-arch i386 -miphoneos-version-min=6.0'",
-"--extra-cflags='-arch i386 -miphoneos-version-min=6.0'",
+"--extra-ldflags='-arch i386 -miphoneos-version-min=8.0'",
+"--extra-cflags='-arch i386 -miphoneos-version-min=8.0'",
+'--disable-asm',
+]
+
+FFMPEG_BUILD_ARGS_SIM64 = [
+'--assert-level=2',
+'--disable-mmx',
+'--arch=x86_64',
+'--cpu=x86_64',
+"--extra-ldflags='-arch x86_64 -miphoneos-version-min=7.1'",
+"--extra-cflags='-arch x86_64 -miphoneos-version-min=7.1'",
 '--disable-asm',
 ]
 
@@ -36,8 +43,8 @@ FFMPEG_BUILD_ARGS_ARMV7 = [
 '--arch=arm',
 '--cpu=cortex-a8',
 '--enable-pic',
-"--extra-cflags='-arch armv7 -miphoneos-version-min=6.0'",
-"--extra-ldflags='-arch armv7 -miphoneos-version-min=6.0'",
+"--extra-cflags='-arch armv7 -miphoneos-version-min=8.0'",
+"--extra-ldflags='-arch armv7 -miphoneos-version-min=8.0'",
 "--extra-cflags='-mfpu=neon -mfloat-abi=softfp'",
 '--enable-neon',
 # '--disable-neon',
@@ -53,8 +60,8 @@ FFMPEG_BUILD_ARGS_ARMV7S = [
 '--arch=arm',
 '--cpu=cortex-a9',
 '--enable-pic',
-"--extra-cflags='-arch armv7s -miphoneos-version-min=6.0'",
-"--extra-ldflags='-arch armv7s -miphoneos-version-min=6.0'",
+"--extra-cflags='-arch armv7s -miphoneos-version-min=8.0'",
+"--extra-ldflags='-arch armv7s -miphoneos-version-min=8.0'",
 "--extra-cflags='-mfpu=neon -mfloat-abi=softfp'",
 '--enable-neon',
 # '--disable-neon',
@@ -70,8 +77,8 @@ FFMPEG_BUILD_ARGS_ARM64 = [
 '--arch=arm64',
 # '--cpu=cortex-a9',
 '--enable-pic',
-"--extra-cflags='-arch arm64 -miphoneos-version-min=6.0'",
-"--extra-ldflags='-arch arm64 -miphoneos-version-min=6.0'",
+"--extra-cflags='-arch arm64 -miphoneos-version-min=8.0'",
+"--extra-ldflags='-arch arm64 -miphoneos-version-min=8.0'",
 "--extra-cflags='-mfpu=neon -mfloat-abi=softfp'",
 '--enable-neon',
 # '--disable-neon',
@@ -105,11 +112,11 @@ FFMPEG_LIBS = [
 'libswresample',
 ]
 
-def mkArgs(platformPath, sdkPath, platformArgs)
+def mkArgs(sdkPath, platformArgs)
 	
 	cc = '--cc=' + GCC_PATH
 	as = ""
-	sysroot = '--sysroot=' + XCODE_PATH + platformPath + sdkPath
+	sysroot = '--sysroot=' + sdkPath
 #	extra = '--extra-ldflags=-L' + XCODE_PATH + platformPath + sdkPath + LIB_PATH
 	extra = ""
 	args = FFMPEG_BUILD_ARGS + platformArgs
@@ -143,13 +150,15 @@ def buildArch(arch)
 
 	case arch
 	when 'i386'
-		args = mkArgs(PLATOFRM_PATH_SIM, SDK_PATH_SIM, FFMPEG_BUILD_ARGS_SIM)
+		args = mkArgs(SDK_PATH_SIM, FFMPEG_BUILD_ARGS_SIM)
+	when 'x86_64'
+ 		args = mkArgs(SDK_PATH_SIM, FFMPEG_BUILD_ARGS_SIM64)
 	when 'armv7'
-		args = mkArgs(PLATOFRM_PATH_IOS, SDK_PATH_IOS, FFMPEG_BUILD_ARGS_ARMV7)
+		args = mkArgs(SDK_PATH_IOS, FFMPEG_BUILD_ARGS_ARMV7)
 	when 'armv7s'
-		args = mkArgs(PLATOFRM_PATH_IOS, SDK_PATH_IOS, FFMPEG_BUILD_ARGS_ARMV7S)		
+		args = mkArgs(SDK_PATH_IOS, FFMPEG_BUILD_ARGS_ARMV7S)		
 	when 'arm64'
-		args = mkArgs(PLATOFRM_PATH_IOS, SDK_PATH_IOS, FFMPEG_BUILD_ARGS_ARM64)		
+		args = mkArgs(SDK_PATH_IOS, FFMPEG_BUILD_ARGS_ARM64)		
 	else
 		raise "Build failed: unknown arch: #{arch}"
 	end
@@ -164,7 +173,7 @@ def buildArch(arch)
 end
 
 def mkLipoArgs(lib)
-	"-create -arch armv7 armv7/#{lib}.a -arch armv7 armv7s/#{lib}.a -arch arm64 arm64/#{lib}.a -arch i386 i386/#{lib}.a -output universal/#{lib}.a"
+	"-create -arch armv7 armv7/#{lib}.a -arch armv7 armv7s/#{lib}.a -arch arm64 arm64/#{lib}.a -arch i386 i386/#{lib}.a -arch x86_64 x86_64/#{lib}.a -output universal/#{lib}.a"
 end
 
 desc "check gas-preprocessor.pl"
@@ -197,9 +206,14 @@ task :clean_ffmpeg do
 	system_or_exit "cd FFmpeg; [ -f -.d ] && rm -- -.d; make clean"
 end
 
-desc "Build ffmpeg i386 libs"
+desc "Build ffmpeg i386 (simulator) libs"
 task :build_ffmpeg_i386 do	
 	buildArch('i386')	
+end
+
+desc "Build ffmpeg x86_64 (simulator) libs"
+task :build_ffmpeg_x86_64 do	
+	buildArch('x86_64')	
 end
 
 desc "Build ffmpeg armv7 libs"
@@ -294,7 +308,7 @@ end
 
 ##
 task :clean => [:clean_movie_debug, :clean_movie_release, :clean_ffmpeg]
-task :build_ffmpeg => [:check_gas_preprocessor, :build_ffmpeg_armv7, :build_ffmpeg_armv7s, :build_ffmpeg_arm64, :build_ffmpeg_i386, :build_ffmpeg_universal]
+task :build_ffmpeg => [:check_gas_preprocessor, :build_ffmpeg_armv7, :build_ffmpeg_armv7s, :build_ffmpeg_arm64, :build_ffmpeg_i386, :build_ffmpeg_x86_64, :build_ffmpeg_universal]
 #task :build_movie => [:build_movie_debug, :copy_movie] 
 task :build_movie => [:build_movie_release, :copy_movie] 
 task :build_all => [:build_ffmpeg, :build_movie] 
