@@ -1,10 +1,16 @@
 PODS:
-  - NSLogger (1.2)
+  - NSLogger (1.5)
 
 DEPENDENCIES:
-  - NSLogger
+  - NSLogger (= 1.5)
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - NSLogger
 
 SPEC CHECKSUMS:
-  NSLogger: 9607fdeafd0b09922c69615f99f127de45971b8f
+  NSLogger: 00b56b1d58232dc59355bc4d840ef8600e13b953
 
-COCOAPODS: 0.32.1
+PODFILE CHECKSUM: 8baaaa7db2a81d62c0f310fb31261503b5249775
+
+COCOAPODS: 1.5.3

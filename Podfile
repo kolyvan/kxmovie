@@ -1,3 +1,5 @@
-platform :ios, '7.0'
+platform :ios, '8.0'
 
-pod 'NSLogger'
+target 'KxMovieExample' do
+    pod 'NSLogger', '1.5'
+end
