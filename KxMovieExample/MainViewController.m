@@ -32,7 +32,7 @@
 
 //            @"http://eric.cast.ro/stream2.flv",
 //            @"http://liveipad.wasu.cn/cctv2_ipad/z.m3u8",
-            @"http://www.wowza.com/_h264/BigBuckBunny_175k.mov",
+            @"http://aliuwmp3.changba.com/userdata/video/45F6BD5E445E4C029C33DC5901307461.mp4",
             // @"http://www.wowza.com/_h264/BigBuckBunny_115k.mov",
             @"rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov",
             @"http://santai.tv/vod/test/test_format_1.3gp",
